@@ -1116,6 +1116,10 @@ end
 
 --lemma int.
 
+theorem rat.num_div_denom (r : ℚ) :
+↑(r.num) / ↑(r.denom) = r :=
+by rw [← int.cast_coe_nat, ← rat.mk_eq_div, rat.num_denom]
+
 example (h : ∀ (x y : E'),
          ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
            2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
@@ -1145,13 +1149,16 @@ begin
     rw set.mem_set_of_eq at this,
     apply this },
   clear r,
-  have hℕ : ∀ r : ℕ, (r : 𝕜) ∈ S,
+  have hℕ' : ∀ (r : ℕ) (x y : E'), inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y,
   { intros r x y,
-    simp only [ring_hom.map_nat_cast] at *,
     rw ←semimodule.nsmul_eq_smul,
     induction r with r ih,
     { simp [inner_] },
     { rw [succ_nsmul', inner_.add_left 𝕜 h, ih, nat.cast_succ, add_mul, one_mul] } },
+  have hℕ : ∀ r : ℕ, (r : 𝕜) ∈ S,
+  { intros r x y,
+    simp only [ring_hom.map_nat_cast],
+    exact hℕ' r x y },
   have hnegone : ↑(-1 : ℤ) ∈ S,
   { intros x y,
     simp only [inner_, neg_mul_eq_neg_mul_symm, one_mul, int.cast_one, one_smul, ring_hom.map_one, conj_neg, int.cast_neg, neg_smul],
@@ -1181,6 +1188,18 @@ begin
     { rw int.sign_eq_one_of_pos hr,
       simp_rw set.mem_set_of_eq at hℕ,
       simp [hℕ] } },
+  have : ∀ r : ℚ, (r : 𝕜) ∈ S,
+  { intros r x y,
+    have : (r.denom : 𝕜) ≠ 0,
+    { haveI : char_zero 𝕜 := char_zero_R_or_C,
+      exact_mod_cast r.pos.ne' },
+    rw ←r.num_div_denom,
+    apply (mul_right_inj' this).mp,
+    rw [←hℕ' r.denom, smul_smul],
+    have : (r.denom : ℚ) * ((r.num : ℚ) / (r.denom : ℚ)) = r.num := mul_div_cancel' _ this,
+--    simp [inner_],
+--    field_simp [this],
+   },
   admit,
 end
 
