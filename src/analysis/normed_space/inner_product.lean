@@ -1114,52 +1114,42 @@ begin
       ring },
 end
 
---lemma int.
+section
+variables (E')
+def inner_prop (r : 𝕜) : Prop := ∀ x y : E', inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y
+end
 
-theorem rat.num_div_denom (r : ℚ) :
-↑(r.num) / ↑(r.denom) = r :=
-by rw [← int.cast_coe_nat, ← rat.mk_eq_div, rat.num_denom]
-
-example (h : ∀ (x y : E'),
+lemma inner_.nat
+  (h : ∀ (x y : E'),
          ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
-           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
-  (x y : E')
-  (r : 𝕜) :
-/-
-  4⁻¹ *
-      ((𝓚 ∥r • x + y∥) * (𝓚 ∥r • x + y∥) -
-             (𝓚 ∥r • x - y∥) * (𝓚 ∥r • x - y∥) +
-           I * (𝓚 ∥r • x + (I:𝕜) • y∥) *
-             (𝓚 ∥r • x + (I:𝕜) • y∥) -
-         I * (𝓚 ∥r • x - (I:𝕜) • y∥) *
-           (𝓚 ∥r • x - (I:𝕜) • y∥)) =
-    conj r *
-      (4⁻¹ *
-         ((𝓚 ∥x + y∥) * (𝓚 ∥x + y∥) -
-                (𝓚 ∥x - y∥) * (𝓚 ∥x - y∥) +
-              I * (𝓚 ∥x + (I:𝕜) • y∥) * (𝓚 ∥x + (I:𝕜) • y∥) -
-            I * (𝓚 ∥x - (I:𝕜) • y∥) * (𝓚 ∥x - (I:𝕜) • y∥))) :=
--/
-  inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y :=
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  ∀ (r : ℕ) (x y : E'),
+           inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y :=
 begin
-  let S := { r : 𝕜 | ∀ (x y : E'), inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y },
-  suffices : S = set.univ,
-  { have : r ∈ S,
-    { rw this, exact set.mem_univ _ },
-    rw set.mem_set_of_eq at this,
-    apply this },
-  clear r,
-  have hℕ' : ∀ (r : ℕ) (x y : E'), inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y,
   { intros r x y,
     rw ←semimodule.nsmul_eq_smul,
     induction r with r ih,
     { simp [inner_] },
     { rw [succ_nsmul', inner_.add_left 𝕜 h, ih, nat.cast_succ, add_mul, one_mul] } },
-  have hℕ : ∀ r : ℕ, (r : 𝕜) ∈ S,
-  { intros r x y,
-    simp only [ring_hom.map_nat_cast],
-    exact hℕ' r x y },
-  have hnegone : ↑(-1 : ℤ) ∈ S,
+end
+
+lemma inner_.nat_prop (r : ℕ)
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  inner_prop 𝕜 E' r :=
+begin
+  intros x y,
+  simp only [ring_hom.map_nat_cast],
+  exact inner_.nat 𝕜 h r x y
+end
+
+lemma inner_.neg_one
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  inner_prop 𝕜 E' (-1 : ℤ) :=
+begin
   { intros x y,
     simp only [inner_, neg_mul_eq_neg_mul_symm, one_mul, int.cast_one, one_smul, ring_hom.map_one, conj_neg, int.cast_neg, neg_smul],
     rw neg_mul_eq_mul_neg,
@@ -1172,22 +1162,106 @@ begin
     { rw [←neg_add', norm_neg] },
     rw [←neg_add', norm_neg, h₂, h₃, h₄],
     ring },
+end
+
+lemma inner_.int_prop (r : ℤ)
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  inner_prop 𝕜 E' r :=
+begin
+  intros x y,
+  have : r = r.sign * r.nat_abs := r.sign_mul_nat_abs.symm,
+  rw this,
+  simp only [int.cast_coe_nat, ring_hom.map_nat_cast, ring_hom.map_int_cast, int.cast_mul,
+    ring_hom.map_mul],
+  rw mul_smul,
+  obtain hr|rfl|hr := lt_trichotomy r 0,
+  { rw int.sign_eq_neg_one_of_neg hr,
+    have hnegone := inner_.neg_one 𝕜 h ((r.nat_abs : 𝕜) • x) y,
+    rw [hnegone, inner_.nat _ h],
+    simp, },
+  { simp [inner_] },
+  { rw int.sign_eq_one_of_pos hr,
+    simp [inner_.nat _ h] }
+end
+
+
+theorem rat.num_div_denom (r : ℚ) :
+↑(r.num) / ↑(r.denom) = r :=
+by rw [← int.cast_coe_nat, ← rat.mk_eq_div, rat.num_denom]
+
+lemma rat_cast_conj (a : ℚ) : conj (a : 𝕜) = a :=
+begin
+  haveI : char_zero 𝕜 := char_zero_R_or_C,
+  convert ring_hom.map_rat_cast _ _,
+  apply_instance,
+end
+
+lemma foo_ℚ (𝕜 : Type*) {E' : Type*} (r : ℚ)
+  [is_R_or_C 𝕜]
+  [normed_group E']
+  [normed_space 𝕜 E']
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
+  (hℕ' : ∀ (r : ℕ) (x y : E'),
+           inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y)
+  (x y : E')
+  (this : (r.denom : 𝕜) ≠ 0) :
+  let S : set 𝕜 :=
+        {r :
+           𝕜 | ∀ (x y : E'),
+           inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y}
+  in (∀ (r : ℤ), ↑r ∈ S) →
+     (r.denom : 𝕜) * (inner_ 𝕜 (((r.num / r.denom : ℚ) : 𝕜) • x) y) =
+      (r.denom : 𝕜) * ((conj (r.num / r.denom : 𝕜)) * inner_ 𝕜 x y) :=
+begin
+  intros S hℤ,
+  rw [←hℕ' r.denom, smul_smul],
+  have h₀ : (r.denom : ℚ) * ((r.num : ℚ) / (r.denom : ℚ)) = r.num,
+  { refine mul_div_cancel' _ _,
+    exact_mod_cast r.pos.ne' },
+  have h₁ : (r.denom : 𝕜) * ((r.num / r.denom : ℚ) : 𝕜) = r.num,
+  { convert mul_div_cancel' _ this using 1, norm_cast, },
+  have h₃ : (r.num / r.denom : 𝕜) = ((r.num / r.denom : ℚ) : 𝕜),
+  { norm_cast },
+  have h₂ : conj (r.num / r.denom : 𝕜) = (r.num / r.denom : 𝕜),
+  { rw h₃, rw rat_cast_conj, },
+  rw h₁,
+  rw h₂,
+  rw hℤ,
+  rw ←mul_assoc,
+  rw ring_hom.map_int_cast,
+  rw mul_div_cancel' _ this,
+end
+
+
+example (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
+  (x y : E')
+  (r : 𝕜) :
+  inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y :=
+begin
+--  admit,
+  let S := { r : 𝕜 | ∀ (x y : E'), inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y },
+  suffices : S = set.univ,
+  { have : r ∈ S,
+    { rw this, exact set.mem_univ _ },
+    rw set.mem_set_of_eq at this,
+    apply this },
+  clear r x y,
+  have hℕ' : ∀ (r : ℕ) (x y : E'), inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y,
+  { apply inner_.nat _ h },
+  have hℕ : ∀ r : ℕ, (r : 𝕜) ∈ S,
+  { intros r,
+    apply inner_.nat_prop _ _ h },
+  have hnegone : ↑(-1 : ℤ) ∈ S,
+  { apply inner_.neg_one _ h },
   have hℤ : ∀ r : ℤ, (r : 𝕜) ∈ S,
-  { intros r x y,
-    have : r = r.sign * r.nat_abs := r.sign_mul_nat_abs.symm,
-    rw this,
-    simp,
-    rw mul_smul,
-    obtain hr|rfl|hr := lt_trichotomy r 0,
-    { rw int.sign_eq_neg_one_of_neg hr,
-      rw set.mem_set_of_eq at hnegone,
-      specialize hnegone ((r.nat_abs : 𝕜) • x) y,
-      rw [hnegone, hℕ],
-      simp, },
-    { simp [inner_] },
-    { rw int.sign_eq_one_of_pos hr,
-      simp_rw set.mem_set_of_eq at hℕ,
-      simp [hℕ] } },
+  { intros r,
+    apply inner_.int_prop _ _ h, },
   have hℚ : ∀ r : ℚ, (r : 𝕜) ∈ S,
   { intros r x y,
     have : (r.denom : 𝕜) ≠ 0,
@@ -1195,29 +1269,12 @@ begin
       exact_mod_cast r.pos.ne' },
     rw ←r.num_div_denom,
     suffices hxxx :
-      ↑(r.denom) * inner_ 𝕜 ((r.num / r.denom : ℚ) : 𝕜) • x) y =
-      ↑(r.denom) * (conj ↑(↑(r.num) / ↑(r.denom)) * inner_ 𝕜 x y),
-    {
-
-      },
-    rw ←(mul_right_inj' this),
-    rw [←hℕ' r.denom, smul_smul],
-    have h₀ : (r.denom : ℚ) * ((r.num : ℚ) / (r.denom : ℚ)) = r.num,
-    { refine mul_div_cancel' _ _,
-      exact_mod_cast r.pos.ne' },
-    have h₁ : (r.denom : 𝕜) * ((r.num / r.denom : ℚ) : 𝕜) = r.num,
-    { convert mul_div_cancel' _ this using 1, norm_cast, },
-    rw h₁,
-    rw hℤ,
-    rw mul_assoc,
-    conv
-    { to_lhs,
-      congr,
-      congr,
-      rw mul_div_cancel' },
---    simp [inner_],
---    field_simp [this],
-   },
+      (r.denom : 𝕜) * (inner_ 𝕜 (((r.num / r.denom : ℚ) : 𝕜) • x) y) =
+      (r.denom : 𝕜) * ((conj (r.num / r.denom : 𝕜)) * inner_ 𝕜 x y),
+    { rw ←(mul_right_inj' this),
+      convert hxxx,
+      rw rat.num_div_denom },
+    apply foo_ℚ _ _ h hℕ' _ _ this hℤ },
   admit,
 end
 
