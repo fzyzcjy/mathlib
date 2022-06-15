@@ -101,6 +101,11 @@ lemma is_normal (h : algebra.is_algebraic K L) : normal K (normal_closure K L) :
 begin
   rw normal_iff_galois_stable _ _ (is_algebraic K L h),
   intro φ,
+  delta normal_closure,
+  intros x hx,
+  dsimp,
+  delta alg_hom.field_range,
+  dsimp,
   sorry,
 end
 
