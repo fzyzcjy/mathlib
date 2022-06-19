@@ -194,6 +194,92 @@ instance (p : F[X]) : normal F p.splitting_field := normal.of_is_splitting_field
 
 end normal_tower
 
+section universal_property
+
+universe u
+
+-- local attribute [-instance] polynomial.splitting_field.algebra'
+
+-- def algebra.comp (K L M : Type*) [field K] [field L] [field M] [algebra K L] [algebra L M] :
+--   algebra K M :=
+-- { smul := λ k m, algebra_map L M (algebra_map K L k) * m,
+--   to_fun := λ k, algebra_map L M (algebra_map K L k),
+--   map_one' := by simp only [map_one],
+--   map_mul' := λ _ _, by simp only [map_mul],
+--   map_zero' := by simp only [map_zero],
+--   map_add' := λ _ _, by simp only [map_add],
+--   commutes' := λ a b, by simp only [mul_comm],
+--   smul_def' := λ r x, rfl }
+
+-- def is_scalar_tower.comp {K L M : Type*} [field K] [field L] [field M] [algebra K L]
+--   [algebra L M] : @is_scalar_tower K L M _ _ (algebra.comp K L M).to_has_scalar :=
+--     by letI : algebra K M := algebra.comp K L M; exact
+--     ⟨λ x y z, begin
+--     simp only [algebra.smul_def],
+--     rw (show ∀ k, algebra_map K M k = algebra_map L M (algebra_map K L k), from λ k, rfl),
+--     simp only [map_mul, mul_assoc],
+--   end⟩
+
+lemma splits_iff_map_roots_splitting_field {L : Type*} [field L]
+  (p : L[X]) : splits (ring_hom.id L) p ↔
+  (p.map (algebra_map L p.splitting_field)).roots = p.roots.map (algebra_map L p.splitting_field) :=
+begin
+  split,
+  { intro h,
+    rw roots_map (algebra_map L p.splitting_field) h, },
+  { intro h,
+    have hs := splitting_field.splits p,
+    rw [← splits_id_iff_splits, splits_iff_card_roots, nat_degree_map] at hs,
+    rw [splits_iff_card_roots, ← hs, ← multiset.card_map, h], },
+end
+
+example {P : Type} [partial_order P] (a b : P) : a ≤ b → (b ≤ a ↔ b = a) := has_le.le.le_iff_eq
+
+lemma splits_iff_map_roots_le_splitting_field {L : Type*} [field L]
+  (p : L[X]) : splits (ring_hom.id L) p ↔
+  (p.map (algebra_map L p.splitting_field)).roots ≤ p.roots.map (algebra_map L p.splitting_field) :=
+begin
+  rw [splits_iff_map_roots_splitting_field, iff.comm],
+  apply has_le.le.le_iff_eq,
+  sorry,
+end
+
+lemma normal_iff_range_subsingleton {K : Type*} [field K] {L : Type u} [field L]
+  [algebra K L] (halg : algebra.is_algebraic K L) : normal K L ↔
+  ∀ {T : Type u} [field T], by exactI
+  ∀ [algebra K T], by exactI
+  ∀ (φ ψ : L →ₐ[K] T), set.range φ ≤ set.range ψ :=
+begin
+  split,
+  { introsI h T _ _ φ ψ,
+    rintro - ⟨a, rfl⟩,
+    have foo := splits_comp_of_splits (algebra_map K L) (φ : L →+* T) (h.splits a),
+    have bar := splits_comp_of_splits (algebra_map K L) (ψ : L →+* T) (h.splits a),
+
+    rw ← splits_map_iff at foo bar,
+    --rw [φ.comp_algebra_map, ← ψ.comp_algebra_map] at this,
+    sorry
+  },
+  { intro h,
+    refine ⟨algebra.is_algebraic_iff_is_integral.1 halg, _⟩,
+    intro b,
+    set f := minpoly K b with hf,
+    set fL := f.map (algebra_map K L),
+    let F := splitting_field (fL),
+    rw ← splits_id_iff_splits,
+    rw splits_iff_map_roots_splitting_field,
+--    letI : algebra K F := algebra.comp K L F,
+--    haveI : is_scalar_tower K L F := is_scalar_tower.comp,
+    -- know f splits in F.
+    -- want: every root of f in F is in L.
+    --
+    sorry
+  },
+end
+
+
+end universal_property
+
 variables {F} {K} {K₁ K₂ K₃:Type*} [field K₁] [field K₂] [field K₃]
  [algebra F K₁] [algebra F K₂] [algebra F K₃]
  (ϕ : K₁ →ₐ[F] K₂) (χ : K₁ ≃ₐ[F] K₂) (ψ : K₂ →ₐ[F] K₃) (ω : K₂ ≃ₐ[F] K₃)
