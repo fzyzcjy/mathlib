@@ -200,25 +200,18 @@ universe u
 
 -- local attribute [-instance] polynomial.splitting_field.algebra'
 
--- def algebra.comp (K L M : Type*) [field K] [field L] [field M] [algebra K L] [algebra L M] :
---   algebra K M :=
--- { smul := λ k m, algebra_map L M (algebra_map K L k) * m,
---   to_fun := λ k, algebra_map L M (algebra_map K L k),
---   map_one' := by simp only [map_one],
---   map_mul' := λ _ _, by simp only [map_mul],
---   map_zero' := by simp only [map_zero],
---   map_add' := λ _ _, by simp only [map_add],
---   commutes' := λ a b, by simp only [mul_comm],
---   smul_def' := λ r x, rfl }
+--def algebra.comp (K L M : Type*) [field K] [field L] [field M] [algebra K L] [algebra L M] :
+--  algebra K M :=
+--restrict_scalars.algebra K L M
 
--- def is_scalar_tower.comp {K L M : Type*} [field K] [field L] [field M] [algebra K L]
---   [algebra L M] : @is_scalar_tower K L M _ _ (algebra.comp K L M).to_has_scalar :=
---     by letI : algebra K M := algebra.comp K L M; exact
---     ⟨λ x y z, begin
---     simp only [algebra.smul_def],
---     rw (show ∀ k, algebra_map K M k = algebra_map L M (algebra_map K L k), from λ k, rfl),
---     simp only [map_mul, mul_assoc],
---   end⟩
+--def is_scalar_tower.comp {K L M : Type*} [field K] [field L] [field M] [algebra K L]
+--  [algebra L M] : @is_scalar_tower K L M _ _ (algebra.comp K L M).to_has_scalar :=
+--    by letI : algebra K M := algebra.comp K L M; exact
+--    ⟨λ x y z, begin
+--    simp only [algebra.smul_def],
+--    rw (show ∀ k, algebra_map K M k = algebra_map L M (algebra_map K L k), from λ k, rfl),
+--    simp only [map_mul, mul_assoc],
+--  end⟩
 
 lemma splits_iff_map_roots_splitting_field {L : Type*} [field L]
   (p : L[X]) : splits (ring_hom.id L) p ↔
@@ -239,9 +232,63 @@ lemma splits_iff_map_roots_le_splitting_field {L : Type*} [field L]
   (p : L[X]) : splits (ring_hom.id L) p ↔
   (p.map (algebra_map L p.splitting_field)).roots ≤ p.roots.map (algebra_map L p.splitting_field) :=
 begin
-  rw [splits_iff_map_roots_splitting_field, iff.comm],
-  apply has_le.le.le_iff_eq,
-  sorry,
+  rw [splits_iff_map_roots_splitting_field, has_le.le.le_iff_eq],
+  simp_rw [multiset.le_iff_count, count_roots],
+  exact count_map_roots (algebra_map L (splitting_field p)).injective,
+end
+
+--lemma asked_on_zulip {K L : Type*} [field K] [field L] (f : K →+* L)
+--(p : K[X]) (a : K) [decidable_eq K] [decidable_eq L] (hp : p ≠ 0) (h : eval a p = 0) : root_multiplicity (f a) (p.map f) =
+--multiset.count a p.roots :=
+--begin
+--  sorry
+--end
+
+lemma eq_root_multiplicity_map  {K L : Type*} [field K] [field L] {p : K[X]} {f : K →+* L} (hf : function.injective f)
+  (a : K) : root_multiplicity a p = root_multiplicity (f a) (map f p) :=
+sorry
+
+lemma splits_iff_map_roots_in_splitting_field {L : Type*} [field L]
+  {p : L[X]} (hp : p ≠ 0) : splits (ring_hom.id L) p ↔ ∀ c : p.splitting_field,
+    polynomial.aeval c p = 0 → ∃ t : L, c = algebra_map L p.splitting_field t :=
+begin
+  split,
+  { -- easy way
+    rw [splits_iff_map_roots_splitting_field, multiset.ext],
+    intros h c hc,
+    specialize h c,
+    have hp' : (map (algebra_map L p.splitting_field) p) ≠ 0 := by simp [hp],
+    have hc' : c ∈ (map (algebra_map L p.splitting_field) p).roots,
+    { rw mem_roots hp',
+      change eval c _ = 0,
+      rw eval_map,
+      exact hc,
+    },
+    rw [← multiset.one_le_count_iff_mem, h, multiset.one_le_count_iff_mem] at hc',
+    rw multiset.mem_map at hc',
+    rcases hc' with ⟨d, hd, hd2⟩,
+    exact ⟨d, hd2.symm⟩,
+  },
+  { -- hard way
+  rw [splits_iff_map_roots_le_splitting_field, multiset.le_iff_count],
+    intros h c,
+    rcases eq_or_ne (multiset.count c (map (algebra_map L p.splitting_field) p).roots) 0
+      with (hzero|hpos),
+    { rw hzero,
+      apply zero_le, },
+    { rw [← nat.one_le_iff_ne_zero, multiset.one_le_count_iff_mem, mem_roots] at hpos,
+        swap, simp [hp],
+      change eval c (p.map (algebra_map L p.splitting_field)) = 0 at hpos,
+      rw eval_map at hpos,
+      obtain ⟨d, rfl⟩ := h c hpos,
+      have : eval d p = 0, { simpa using hpos, },
+      rw [count_roots],
+      have zulip := eq_root_multiplicity_map (algebra_map L (splitting_field p)).injective d,
+      simp only [← polynomial.count_roots] at zulip ⊢,
+      rw ← zulip,
+      rw multiset.count_map_eq_count' _ _ (algebra_map L (splitting_field p)).injective,
+    },
+  },
 end
 
 lemma normal_iff_range_subsingleton {K : Type*} [field K] {L : Type u} [field L]
@@ -253,26 +300,50 @@ begin
   split,
   { introsI h T _ _ φ ψ,
     rintro - ⟨a, rfl⟩,
-    have foo := splits_comp_of_splits (algebra_map K L) (φ : L →+* T) (h.splits a),
-    have bar := splits_comp_of_splits (algebra_map K L) (ψ : L →+* T) (h.splits a),
-
-    rw ← splits_map_iff at foo bar,
-    --rw [φ.comp_algebra_map, ← ψ.comp_algebra_map] at this,
-    sorry
+    have hsplits := h.splits a,
+    have hmin : minpoly K a ≠ 0,
+    { apply minpoly.ne_zero, rw ← is_algebraic_iff_is_integral, exact halg a, },
+    rw ← splits_id_iff_splits at hsplits,
+    have this2 := roots_map (φ : L →+* T) hsplits,
+    rw map_map at this2,
+    rw [alg_hom.comp_algebra_map_of_tower] at this2,
+    have this3 := roots_map (ψ : L →+* T) hsplits,
+    rw [map_map, alg_hom.comp_algebra_map_of_tower] at this3,
+    rw this2 at this3,
+    simp at this3,
+    suffices : φ a ∈ multiset.map ψ (map (algebra_map K L) (minpoly K a)).roots,
+    { rw multiset.mem_map at this,
+      rcases this with ⟨b, hb, hphipsi⟩,
+      rw ← hphipsi,
+      simp only [set.mem_range_self], },
+    rw ← this3,
+    rw multiset.mem_map,
+    refine ⟨a, _, rfl⟩,
+    rw mem_roots_map hmin,
+    have := minpoly.aeval K a,
+    simpa,
   },
   { intro h,
     refine ⟨algebra.is_algebraic_iff_is_integral.1 halg, _⟩,
     intro b,
     set f := minpoly K b with hf,
+    have hf0 : f ≠ 0 := minpoly.ne_zero (is_algebraic_iff_is_integral.1 (halg b)),
     set fL := f.map (algebra_map K L),
+    have hfL0 : fL ≠ 0 := by simp [hf0],
     let F := splitting_field (fL),
     rw ← splits_id_iff_splits,
-    rw splits_iff_map_roots_splitting_field,
---    letI : algebra K F := algebra.comp K L F,
---    haveI : is_scalar_tower K L F := is_scalar_tower.comp,
-    -- know f splits in F.
-    -- want: every root of f in F is in L.
-    --
+    rw splits_iff_map_roots_in_splitting_field hfL0,
+    intros c hc,
+    /-
+    Let i be the name of the coercion from L to F.
+    define j : K(c) -> F (or poss Lbar or whatever)
+    mapping c to i(b)
+    Extend j to j : L -> F by splitting-field-ness.
+    And now j(c)=i(b) so j(c) ∈ i(L) and by hypo j(c) ∈ j(L)
+    so i=φ and j=ψ.
+    so c is in L.
+    -/
+
     sorry
   },
 end
