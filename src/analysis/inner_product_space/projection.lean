@@ -3,6 +3,7 @@ Copyright (c) 2019 Zhouhang Zhou. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Zhouhang Zhou, Frédéric Dupuis, Heather Macbeth
 -/
+import algebra.direct_sum.decomposition
 import analysis.convex.basic
 import analysis.inner_product_space.basic
 import analysis.normed_space.is_R_or_C
@@ -1045,6 +1046,47 @@ begin
   exact hV.is_internal_iff_of_is_complete
     (complete_space_coe_iff_is_complete.mp infer_instance)
 end
+
+open_locale direct_sum
+
+/-- If a family of submodules is orthogonal and they span the whole space, then the orthogonal
+projection provides a means to decompose the space into its submodules.
+
+See nnote [reducible non-instances]. -/
+@[reducible]
+def orthogonal_family.decomposition [decidable_eq ι] [fintype ι] {V : ι → submodule 𝕜 E}
+  [∀ i, complete_space ↥(V i)]
+  (hV : @orthogonal_family 𝕜 _ _ _ _ (λ i, V i) _ (λ i, (V i).subtypeₗᵢ)) (h : supr V = ⊤) :
+  direct_sum.decomposition V :=
+{ decompose' := λ x, ∑ i, direct_sum.of _ i (orthogonal_projection (V i) x),
+  left_inv := λ x, begin
+    rw map_sum,
+    simp_rw direct_sum.coe_add_monoid_hom_of,
+    have : x ∈ _ := (h.ge : _) submodule.mem_top,
+    refine submodule.supr_induction _ this (λ i x hx, _) _ (λ x y hx hy, _),
+    { refine (finset.sum_eq_single_of_mem i (finset.mem_univ _) $ λ j _ hij, _).trans
+       (orthogonal_projection_eq_self_iff.mpr hx),
+      rw [orthogonal_projection_mem_subspace_orthogonal_complement_eq_zero, submodule.coe_zero],
+      rw submodule.mem_orthogonal,
+      intros y hy,
+      exact hV hij ⟨_, hy⟩ ⟨_, hx⟩ },
+    { simp_rw [map_zero, submodule.coe_zero, finset.sum_const_zero] },
+    { simp_rw [map_add, submodule.coe_add, finset.sum_add_distrib],
+      exact congr_arg2 (+) hx hy },
+  end,
+  right_inv := λ x, begin
+    induction x using direct_sum.induction_on with i x x y hx hy,
+    { simp },
+    { simp only [direct_sum.coe_add_monoid_hom_of],
+      rw [(finset.sum_eq_single_of_mem i (finset.mem_univ _) $ λ j _ hij, _),
+        orthogonal_projection_mem_subspace_eq_self],
+      { rw [orthogonal_projection_mem_subspace_orthogonal_complement_eq_zero, map_zero],
+        rw submodule.mem_orthogonal,
+        intros y hy,
+        exact hV hij ⟨_, hy⟩ x } },
+    { simp_rw [map_add, finset.sum_add_distrib],
+      exact congr_arg2 (+) hx hy },
+  end }
 
 end orthogonal_family
 
