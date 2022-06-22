@@ -185,7 +185,9 @@ fixed_points.finrank_eq_card H E
 lemma fixed_field_normal [normal F E] [H.normal] :
 normal F (fixed_field H) :=
 begin
-  -- I know a cool proof using `is_normal` that will definitely work in the Galois case
+  rw normal_iff_range_le_range, swap, sorry,
+  introsI,
+  -- what now?
   sorry
 end
 
@@ -194,11 +196,14 @@ def fixing_subgroup : subgroup (E ≃ₐ[F] E) :=
 fixing_subgroup (E ≃ₐ[F] E) (K : set E)
 
 lemma fixing_group_normal [normal F E] [normal F (fixed_field H)] : H.normal :=
-begin
-  -- equally easy if we have `is_normal`
-  sorry
+{ conj_mem := begin
+  intros h hh g,
+  -- suffices to prove the map fixes the fixed field.
+  --ghg⁻¹(f)=f i.e. that h fixes g⁻¹(f) where f is in the fixed field.
+  rw normal_iff_range_le_range at _inst_5,
+  sorry, sorry,
 end
-
+}
 
 lemma le_iff_le : K ≤ fixed_field H ↔ H ≤ fixing_subgroup K :=
 ⟨λ h g hg x, h (subtype.mem x) ⟨g, hg⟩, λ h x hx g, h (subtype.mem g) ⟨x, hx⟩⟩

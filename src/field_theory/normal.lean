@@ -328,19 +328,30 @@ begin
     set fL := f.map (algebra_map K L),
     have hfL0 : fL ≠ 0 := by simp [hf0],
     let F := splitting_field (fL),
+    set fF := f.map (algebra_map K F),
     rw ← splits_id_iff_splits,
     rw splits_iff_map_roots_in_splitting_field hfL0,
     intros c hc,
+    -- need a proof tgar c us ubtegrak iver K
+    have hc2 : is_integral K c,
+    { rw ← is_algebraic_iff_is_integral,
+      apply algebra.is_algebraic_trans halg,
+      haveI := is_splitting_field.finite_dimensional F fL,
+      apply algebra.is_algebraic_of_finite L F,
+      apply polynomial.splitting_field_aux.is_scalar_tower,
+    },
+    let j : K⟮c⟯ →ₐ[K] F :=
+      (intermediate_field.alg_hom_adjoin_integral_equiv K hc2).symm ⟨algebra_map L F b, by {
+        rw mem_roots,
+        sorry, sorry, -- math-easy, messy
+      }⟩,
     /-
-    Let i be the name of the coercion from L to F.
-    define j : K(c) -> F (or poss Lbar or whatever)
-    mapping c to i(b)
-    Extend j to j : L -> F by splitting-field-ness.
-    And now j(c)=i(b) so j(c) ∈ i(L) and by hypo j(c) ∈ j(L)
-    so i=φ and j=ψ.
+    Let φ be the name of the coercion from L to F (no, it's algebra_map L F).
+    define j : K(c) -> F mapping c to φ(b)
+    Extend j to ψ : L -> F by splitting-field-ness.
+    And now ψ(c)=φ(b) so ψ(c) ∈ φ(L) and so by ≤ hypo ψ(c) ∈ ψ(L)
     so c is in L.
     -/
-
     sorry
   },
 end
