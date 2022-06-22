@@ -182,9 +182,23 @@ lemma finrank_fixed_field_eq_card [finite_dimensional F E] [decidable_pred (∈ 
   finrank (fixed_field H) E = fintype.card H :=
 fixed_points.finrank_eq_card H E
 
+lemma fixed_field_normal [normal F E] [H.normal] :
+normal F (fixed_field H) :=
+begin
+  -- I know a cool proof using `is_normal` that will definitely work in the Galois case
+  sorry
+end
+
 /-- The subgroup fixing an intermediate_field -/
 def fixing_subgroup : subgroup (E ≃ₐ[F] E) :=
 fixing_subgroup (E ≃ₐ[F] E) (K : set E)
+
+lemma fixing_group_normal [normal F E] [normal F (fixed_field H)] : H.normal :=
+begin
+  -- equally easy if we have `is_normal`
+  sorry
+end
+
 
 lemma le_iff_le : K ≤ fixed_field H ↔ H ≤ fixing_subgroup K :=
 ⟨λ h g hg x, h (subtype.mem x) ⟨g, hg⟩, λ h x hx g, h (subtype.mem g) ⟨x, hx⟩⟩
