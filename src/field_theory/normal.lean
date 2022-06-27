@@ -8,6 +8,7 @@ import field_theory.adjoin
 import field_theory.tower
 import group_theory.solvable
 import ring_theory.power_basis
+import data.polynomial.ring_division
 
 /-!
 # Normal field extensions
@@ -244,9 +245,9 @@ end
 --  sorry
 --end
 
-lemma eq_root_multiplicity_map  {K L : Type*} [field K] [field L] {p : K[X]} {f : K →+* L} (hf : function.injective f)
-  (a : K) : root_multiplicity a p = root_multiplicity (f a) (map f p) :=
-sorry
+-- lemma eq_root_multiplicity_map  {K L : Type*} [field K] [field L] {p : K[X]} {f : K →+* L} (hf : function.injective f)
+--   (a : K) : root_multiplicity a p = root_multiplicity (f a) (map f p) :=
+-- sorry
 
 lemma splits_iff_map_roots_in_splitting_field {L : Type*} [field L]
   {p : L[X]} (hp : p ≠ 0) : splits (ring_hom.id L) p ↔ ∀ c : p.splitting_field,
@@ -264,8 +265,7 @@ begin
       rw eval_map,
       exact hc,
     },
-    rw [← multiset.one_le_count_iff_mem, h, multiset.one_le_count_iff_mem] at hc',
-    rw multiset.mem_map at hc',
+    rw [← multiset.one_le_count_iff_mem, h, multiset.one_le_count_iff_mem, multiset.mem_map] at hc',
     rcases hc' with ⟨d, hd, hd2⟩,
     exact ⟨d, hd2.symm⟩,
   },
@@ -283,41 +283,38 @@ begin
       obtain ⟨d, rfl⟩ := h c hpos,
       have : eval d p = 0, { simpa using hpos, },
       rw [count_roots],
-      have zulip := eq_root_multiplicity_map (algebra_map L (splitting_field p)).injective d,
-      simp only [← polynomial.count_roots] at zulip ⊢,
-      rw ← zulip,
-      rw multiset.count_map_eq_count' _ _ (algebra_map L (splitting_field p)).injective,
-    },
+      have h2 := eq_root_multiplicity_map (algebra_map L (splitting_field p)).injective d,
+      simp only [← polynomial.count_roots] at h2 ⊢,
+      rw [← h2, multiset.count_map_eq_count' _ _ (algebra_map L (splitting_field p)).injective], },
   },
 end
 
-lemma normal_iff_range_subsingleton {K : Type*} [field K] {L : Type u} [field L]
+lemma normal_iff_range_le_range {K : Type*} [field K] {L : Type u} [field L]
   [algebra K L] (halg : algebra.is_algebraic K L) : normal K L ↔
   ∀ (T : Type u) [field T], by exactI
   ∀ [algebra K T], by exactI
-  ∀ (φ ψ : L →ₐ[K] T), set.range φ ≤ set.range ψ :=
+  ∀ (φ ψ : L →ₐ[K] T), φ.range ≤ ψ.range :=
 begin
   split,
   { introsI h T _ _ φ ψ,
     rintro - ⟨a, rfl⟩,
-    have hsplits := h.splits a,
+    change φ a ∈ ψ.range,
     have hmin : minpoly K a ≠ 0,
     { apply minpoly.ne_zero, rw ← is_algebraic_iff_is_integral, exact halg a, },
+    have hsplits := h.splits a,
     rw ← splits_id_iff_splits at hsplits,
     have this2 := roots_map (φ : L →+* T) hsplits,
-    rw map_map at this2,
-    rw [alg_hom.comp_algebra_map_of_tower] at this2,
+    rw [map_map, alg_hom.comp_algebra_map_of_tower] at this2,
     have this3 := roots_map (ψ : L →+* T) hsplits,
     rw [map_map, alg_hom.comp_algebra_map_of_tower] at this3,
     rw this2 at this3,
-    simp at this3,
+    simp only [alg_hom.coe_to_ring_hom] at this3,
     suffices : φ a ∈ multiset.map ψ (map (algebra_map K L) (minpoly K a)).roots,
     { rw multiset.mem_map at this,
       rcases this with ⟨b, hb, hphipsi⟩,
       rw ← hphipsi,
-      simp only [set.mem_range_self], },
-    rw ← this3,
-    rw multiset.mem_map,
+      exact set.mem_range_self b, },
+    rw [← this3, multiset.mem_map],
     refine ⟨a, _, rfl⟩,
     rw mem_roots_map hmin,
     have := minpoly.aeval K a,
