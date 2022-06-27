@@ -293,7 +293,7 @@ end
 
 lemma normal_iff_range_subsingleton {K : Type*} [field K] {L : Type u} [field L]
   [algebra K L] (halg : algebra.is_algebraic K L) : normal K L ↔
-  ∀ {T : Type u} [field T], by exactI
+  ∀ (T : Type u) [field T], by exactI
   ∀ [algebra K T], by exactI
   ∀ (φ ψ : L →ₐ[K] T), set.range φ ≤ set.range ψ :=
 begin
@@ -334,13 +334,14 @@ begin
     rw ← splits_id_iff_splits,
     rw splits_iff_map_roots_in_splitting_field hfL0,
     intros c hc,
+    specialize h F,
+    haveI : is_scalar_tower K L F := polynomial.splitting_field_aux.is_scalar_tower _ _ _ _,
     /-
-    Let i be the name of the coercion from L to F.
+    Let φ be the name of the coercion from L to F.
     define j : K(c) -> F (or poss Lbar or whatever)
     mapping c to i(b)
-    Extend j to j : L -> F by splitting-field-ness.
-    And now j(c)=i(b) so j(c) ∈ i(L) and by hypo j(c) ∈ j(L)
-    so i=φ and j=ψ.
+    Extend j to j=ψ : L -> F by splitting-field-ness.
+    And now ψ(c)=φ(b) so ψ(c) ∈ φ(L) and by hypo ψ(c) ∈ ψ(L)
     so c is in L.
     -/
 
