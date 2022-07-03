@@ -1485,36 +1485,6 @@ begin
   exact integral_trim hm hf.strongly_measurable_mk,
 end
 
-lemma ae_eq_trim_of_strongly_measurable
-  [topological_space γ] [metrizable_space γ] (hm : m ≤ m0) {f g : β → γ}
-  (hf : strongly_measurable[m] f) (hg : strongly_measurable[m] g) (hfg : f =ᵐ[μ] g) :
-  f =ᵐ[μ.trim hm] g :=
-begin
-  rwa [eventually_eq, ae_iff, trim_measurable_set_eq hm _],
-  exact (hf.measurable_set_eq_fun hg).compl
-end
-
-lemma ae_eq_trim_iff [topological_space γ] [metrizable_space γ]
-  (hm : m ≤ m0) {f g : β → γ} (hf : strongly_measurable[m] f) (hg : strongly_measurable[m] g) :
-  f =ᵐ[μ.trim hm] g ↔ f =ᵐ[μ] g :=
-⟨ae_eq_of_ae_eq_trim, ae_eq_trim_of_strongly_measurable hm hf hg⟩
-
-lemma ae_le_trim_of_strongly_measurable
-  [linear_order γ] [topological_space γ] [order_closed_topology γ] [pseudo_metrizable_space γ]
-  (hm : m ≤ m0) {f g : β → γ} (hf : strongly_measurable[m] f) (hg : strongly_measurable[m] g)
-  (hfg : f ≤ᵐ[μ] g) :
-  f ≤ᵐ[μ.trim hm] g :=
-begin
-  rwa [eventually_le, ae_iff, trim_measurable_set_eq hm _],
-  exact (hf.measurable_set_le hg).compl,
-end
-
-lemma ae_le_trim_iff
-  [linear_order γ] [topological_space γ] [order_closed_topology γ] [pseudo_metrizable_space γ]
-  (hm : m ≤ m0) {f g : β → γ} (hf : strongly_measurable[m] f) (hg : strongly_measurable[m] g) :
-  f ≤ᵐ[μ.trim hm] g ↔ f ≤ᵐ[μ] g :=
-⟨ae_le_of_ae_le_trim, ae_le_trim_of_strongly_measurable hm hf hg⟩
-
 end integral_trim
 
 end measure_theory
