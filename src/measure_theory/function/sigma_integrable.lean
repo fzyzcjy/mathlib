@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 
 import measure_theory.integral.integrable_on
+import analysis.normed_space.enorm
 
 /-!
 # σ-integrable functions
@@ -26,8 +27,9 @@ open_locale measure_theory nnreal ennreal topological_space big_operators
 
 namespace measure_theory
 
-variables {α E F : Type*} {m m₂ m0' m0 : measurable_space α} {μ ν : measure α} {ν' : @measure α m0'}
-  [normed_group E] [normed_group F]
+variables {α E F G : Type*}
+  {m m₂ m0' m0 : measurable_space α} {μ ν : measure α} {ν' : @measure α m0'}
+  [normed_group E] [normed_group F] [normed_group G] [normed_space ℝ G]
   {f g : α → E} {s t : set α}
 
 @[protect_proj, nolint has_inhabited_instance]
@@ -137,17 +139,24 @@ noncomputable
 def mk_strongly_measurable_aux (hf : sigma_integrable m f μ) : ℕ → α → E :=
 λ n, (hf.spanning_sets_disj n).indicator ((hf.integrable_on_spanning_sets_disj n).1.mk _)
 
-lemma ae_eq_mk_strongly_measurable_aux (hf : sigma_integrable m f μ) (hm : m ≤ m0) (n : ℕ) :
-  f =ᵐ[μ.restrict (hf.spanning_sets_disj n)] hf.mk_strongly_measurable_aux n :=
+lemma ae_eq_mk_strongly_measurable_aux' (hf : sigma_integrable m f μ) (n : ℕ) :
+  ∀ᵐ x ∂μ, x ∈ hf.spanning_sets_disj n → f x = hf.mk_strongly_measurable_aux n x :=
 begin
-  have h := (hf.integrable_on_spanning_sets_disj n).1.ae_eq_mk,
-  rw [eventually_eq, ae_restrict_iff' (hm _ (hf.measurable_spanning_sets_disj n))] at h ⊢,
+  have h : ∀ᵐ x ∂μ, x ∈ hf.spanning_sets_disj n → f x = ae_strongly_measurable.mk f _ x,
+    from ae_imp_of_ae_restrict (hf.integrable_on_spanning_sets_disj n).1.ae_eq_mk,
   refine h.mono (λ x hx hx_mem, _),
   specialize hx hx_mem,
   rw mk_strongly_measurable_aux,
   dsimp only,
   rw [indicator_of_mem hx_mem],
   exact hx,
+end
+
+lemma ae_eq_mk_strongly_measurable_aux (hf : sigma_integrable m f μ) (hm : m ≤ m0) (n : ℕ) :
+  f =ᵐ[μ.restrict (hf.spanning_sets_disj n)] hf.mk_strongly_measurable_aux n :=
+begin
+  rw [eventually_eq, ae_restrict_iff' (hm _ (hf.measurable_spanning_sets_disj n))],
+  exact ae_eq_mk_strongly_measurable_aux' hf n,
 end
 
 lemma strongly_measurable_mk_strongly_measurable_aux (hf : sigma_integrable m f μ) (hm : m ≤ m0)
@@ -163,16 +172,13 @@ def mk_strongly_measurable (hf : sigma_integrable m f μ)
   α → E :=
 λ x, (hf.mk_strongly_measurable_aux (hf.first_spanning_sets_disj_mem x)) x
 
-lemma ae_eq_mk_strongly_measurable (hf : sigma_integrable m f μ) (hm : m ≤ m0)
+lemma ae_eq_mk_strongly_measurable (hf : sigma_integrable m f μ)
   [∀ x, decidable_pred (λ n, x ∈ hf.spanning_sets_disj n)] :
   f =ᵐ[μ] hf.mk_strongly_measurable :=
 begin
   have h_ae_eq' : ∀ n, ∀ᵐ x ∂μ,
     x ∈ (hf.spanning_sets_disj n) → f x = hf.mk_strongly_measurable_aux n x,
-  { intro n,
-    have h_ae_eq := hf.ae_eq_mk_strongly_measurable_aux hm n,
-    rw [eventually_eq, ae_restrict_iff' (hm _ (hf.measurable_spanning_sets_disj n))] at h_ae_eq,
-    exact h_ae_eq, },
+  { exact λ n, hf.ae_eq_mk_strongly_measurable_aux' n, },
   rw ← ae_all_iff at h_ae_eq',
   refine h_ae_eq'.mono (λ x hx, _),
   exact hx (hf.first_spanning_sets_disj_mem x) (hf.mem_first_spanning_sets_disj_mem x),
@@ -288,7 +294,7 @@ protected lemma ae_strongly_measurable (hf : sigma_integrable m f μ) (hm : m �
 begin
   classical,
   exact ⟨hf.mk_strongly_measurable, hf.strongly_measurable_mk_strongly_measurable hm,
-    hf.ae_eq_mk_strongly_measurable hm⟩,
+    hf.ae_eq_mk_strongly_measurable⟩,
 end
 
 lemma congr_fun (hfg : f =ᵐ[μ] g) (hf : sigma_integrable m f μ) :
@@ -431,6 +437,18 @@ lemma sub (hf : sigma_integrable m f μ) (hg : sigma_integrable m g μ) :
   sigma_integrable m (f - g) μ :=
 by { rw sub_eq_add_neg, exact hf.add hg.neg, }
 
+section normed_space
+variables [normed_space ℝ E]
+
+lemma const_smul (c : ℝ) (hf : sigma_integrable m f μ) :
+  sigma_integrable m (λ x, c • f x) μ :=
+⟨⟨hf.spanning_sets,
+  hf.measurable_spanning_sets,
+  λ n, (hf.integrable_on_spanning_sets n).smul c,
+  hf.Union_spanning_sets⟩⟩
+
+end normed_space
+
 end sigma_integrable
 
 /-- If the measure is σ-finite, a strongly measurable function is σ-integrable on the σ-algebra
@@ -504,7 +522,7 @@ end
 
 lemma strongly_measurable.is_bounded_bilinear_map {m : measurable_space α} [normed_space ℝ E]
   [normed_space ℝ F] {g : α → F}
-  (hf : strongly_measurable f) (hg : strongly_measurable g) (B : E × F → ℝ)
+  (hf : strongly_measurable f) (hg : strongly_measurable g) (B : E × F → G)
   (hB : is_bounded_bilinear_map ℝ B) :
   strongly_measurable (λ x, B (f x, g x)) :=
 begin
@@ -518,7 +536,7 @@ end
 
 lemma strongly_measurable.continuous_bilinear_map {m : measurable_space α} [normed_space ℝ E]
   [normed_space ℝ F] {g : α → F}
-  (hf : strongly_measurable f) (hg : strongly_measurable g) (B : E →L[ℝ] F →L[ℝ] ℝ) :
+  (hf : strongly_measurable f) (hg : strongly_measurable g) (B : E →L[ℝ] F →L[ℝ] G) :
   strongly_measurable (λ x, B (f x) (g x)) :=
 begin
   have h_is_bbm : is_bounded_bilinear_map ℝ (λ (p : E × F), B p.1 p.2),
@@ -528,7 +546,7 @@ end
 
 lemma ae_strongly_measurable.is_bounded_bilinear_map [normed_space ℝ E]
   [normed_space ℝ F] {g : α → F}
-  (hf : ae_strongly_measurable f μ) (hg : ae_strongly_measurable g μ) (B : E × F → ℝ)
+  (hf : ae_strongly_measurable f μ) (hg : ae_strongly_measurable g μ) (B : E × F → G)
   (hB : is_bounded_bilinear_map ℝ B) :
   ae_strongly_measurable (λ x, B (f x, g x)) μ :=
 begin
@@ -540,7 +558,7 @@ end
 
 lemma ae_strongly_measurable.continuous_bilinear_map [normed_space ℝ E]
   [normed_space ℝ F] {g : α → F}
-  (hf : ae_strongly_measurable f μ) (hg : ae_strongly_measurable g μ) (B : E →L[ℝ] F →L[ℝ] ℝ) :
+  (hf : ae_strongly_measurable f μ) (hg : ae_strongly_measurable g μ) (B : E →L[ℝ] F →L[ℝ] G) :
   ae_strongly_measurable (λ x, B (f x) (g x)) μ :=
 begin
   have h_is_bbm : is_bounded_bilinear_map ℝ (λ (p : E × F), B p.1 p.2),
@@ -551,7 +569,7 @@ end
 lemma sigma_integrable.is_bounded_bilinear_map  [normed_space ℝ E]
   [measurable_space F] [borel_space F] [normed_space ℝ F] {g : α → F}
   (hm : m ≤ m0) (hf : sigma_integrable m f μ) (hg : strongly_measurable[m] g)
-  (B : E × F → ℝ) (hB : is_bounded_bilinear_map ℝ B) :
+  (B : E × F → G) (hB : is_bounded_bilinear_map ℝ B) :
   sigma_integrable m (λ x, B (f x, g x)) μ :=
 begin
   let norm_sets := λ (n : ℕ), {x | ∥g x∥ ≤ n},
@@ -591,7 +609,7 @@ end
 lemma sigma_integrable.continuous_bilinear_map  [normed_space ℝ E]
   [measurable_space F] [borel_space F] [normed_space ℝ F] {g : α → F}
   (hm : m ≤ m0) (hf : sigma_integrable m f μ) (hg : strongly_measurable[m] g)
-  (B : E →L[ℝ] F →L[ℝ] ℝ) :
+  (B : E →L[ℝ] F →L[ℝ] G) :
   sigma_integrable m (λ x, B (f x) (g x)) μ :=
 begin
   have h_is_bbm : is_bounded_bilinear_map ℝ (λ (p : E × F), B p.1 p.2),
@@ -601,14 +619,14 @@ end
 
 lemma integrable.sigma_integrable_is_bounded_bilinear_map [normed_space ℝ E]
   [measurable_space F] [borel_space F] [normed_space ℝ F] {g : α → F}
-  (hm : m ≤ m0) (hf : integrable f μ) (hg : strongly_measurable[m] g) (B : E × F → ℝ)
+  (hm : m ≤ m0) (hf : integrable f μ) (hg : strongly_measurable[m] g) (B : E × F → G)
     (hB : is_bounded_bilinear_map ℝ B) :
   sigma_integrable m (λ x, B (f x, g x)) μ :=
 (hf.sigma_integrable m).is_bounded_bilinear_map hm hg B hB
 
 lemma integrable.sigma_integrable_continuous_bilinear_map [normed_space ℝ E]
   [measurable_space F] [borel_space F] [normed_space ℝ F] {g : α → F}
-  (hm : m ≤ m0) (hf : integrable f μ) (hg : strongly_measurable[m] g) (B : E →L[ℝ] F →L[ℝ] ℝ) :
+  (hm : m ≤ m0) (hf : integrable f μ) (hg : strongly_measurable[m] g) (B : E →L[ℝ] F →L[ℝ] G) :
   sigma_integrable m (λ x, B (f x) (g x)) μ :=
 (hf.sigma_integrable m).continuous_bilinear_map hm hg B
 
@@ -643,5 +661,216 @@ localized "notation α ` →₁σ[`:25 μ `,` m `] ` E := measure_theory.L1σ E 
 lemma L1σ.sigma_integrable (f : α →₁σ[μ, m] E) :
   sigma_integrable m f μ :=
 f.prop
+
+noncomputable
+instance : has_coe_to_fun (α →₁σ[μ, m] E) (λ _, α → E) := ⟨λ f, ((f : α →ₘ[μ] E) : α → E)⟩
+
+@[ext] lemma ext {f g : α →₁σ[μ, m] E} (h : f =ᵐ[μ] g) : f = g :=
+begin
+  cases f,
+  cases g,
+  simp only [subtype.mk_eq_mk],
+  exact ae_eq_fun.ext h
+end
+
+lemma ext_iff {f g : α →₁σ[μ, m] E} : f = g ↔ f =ᵐ[μ] g :=
+⟨λ h, by rw h, λ h, ext h⟩
+
+variables (E m μ)
+lemma L1σ.coe_fn_zero : ((0 : α →₁σ[μ, m] E) : α → E) =ᵐ[μ] 0 := ae_eq_fun.coe_fn_zero
+variables {E m μ}
+
+lemma L1σ.coe_fn_add (f g : α →₁σ[μ, m] E) : ⇑(f + g) =ᵐ[μ] f + g := ae_eq_fun.coe_fn_add _ _
+lemma L1σ.coe_fn_neg (f : α →₁σ[μ, m] E) : ⇑(-f) =ᵐ[μ] -f := ae_eq_fun.coe_fn_neg _
+lemma L1σ.coe_fn_sub (f g : α →₁σ[μ, m] E) : ⇑(f - g) =ᵐ[μ] f - g := ae_eq_fun.coe_fn_sub _ _
+
+section normed_space
+
+variables [normed_space ℝ E]
+
+variables (E m μ)
+
+/-- The `𝕜`-submodule of elements of `α →ₘ[μ] E` whose `Lp` norm is finite.  This is `Lp E p μ`,
+with extra structure. -/
+def L1σ_submodule : submodule ℝ (α →ₘ[μ] E) :=
+{ smul_mem' := λ c f hf, (hf.const_smul c).congr_fun (ae_eq_fun.coe_fn_smul c f).symm,
+  .. α →₁σ[μ, m] E }
+
+variables {E m μ}
+
+lemma coe_L1σ_submodule : (L1σ_submodule E m μ).to_add_subgroup = (α →₁σ[μ, m] E) := rfl
+
+noncomputable instance : module ℝ (α →₁σ[μ, m] E) :=
+{ .. (L1σ_submodule E m μ).module }
+
+lemma L1σ.coe_fn_smul (c : ℝ) (f : α →₁σ[μ, m] E) : ⇑(c • f) =ᵐ[μ] c • f :=
+ae_eq_fun.coe_fn_smul _ _
+
+end normed_space
+
+section emetric_space
+
+variables [normed_space ℝ E]
+
+noncomputable
+def L1σ_enorm_fun (f : α →₁σ[μ, m] E) : ℝ≥0∞ :=
+@ite _ (integrable f μ) (classical.dec (integrable f μ)) (∫⁻ x, ∥f x∥₊ ∂μ) ∞
+
+@[simp] lemma L1σ_enorm_fun_of_integrable (f : α →₁σ[μ, m] E) (hf : integrable f μ) :
+  L1σ_enorm_fun f = ∫⁻ x, ∥f x∥₊ ∂μ :=
+by { classical, rw [L1σ_enorm_fun, if_pos hf] }
+
+@[simp] lemma L1σ_enorm_fun_undef (f : α →₁σ[μ, m] E) (hf : ¬ integrable f μ) :
+  L1σ_enorm_fun f = ∞ :=
+by { classical, rw [L1σ_enorm_fun, if_neg hf] }
+
+@[simp] lemma L1σ_enorm_fun_zero : L1σ_enorm_fun (0 : α →₁σ[μ, m] E) = 0 :=
+begin
+  classical,
+  have h_int : integrable ⇑(0 : α →₁σ[μ, m] E) μ,
+    from (integrable_zero α E μ).congr (L1σ.coe_fn_zero E m μ).symm,
+  rw [L1σ_enorm_fun, if_pos h_int, lintegral_eq_zero_iff' h_int.ae_strongly_measurable.ennnorm],
+  filter_upwards [L1σ.coe_fn_zero E m μ] with x hx,
+  simp only [hx, pi.zero_apply, nnnorm_zero, ennreal.coe_zero],
+end
+
+lemma L1σ_enorm_fun_eq_zero {f : α →₁σ[μ, m] E} (h : L1σ_enorm_fun f = 0) :
+  f = 0 :=
+begin
+  by_cases hf_int : integrable f μ,
+  swap, { rw L1σ_enorm_fun_undef f hf_int at h, exact absurd h.symm ennreal.zero_ne_top, },
+  rw L1σ_enorm_fun_of_integrable f hf_int at h,
+  ext1,
+  suffices h_zero_norm : (λ x, (∥f x∥₊ : ℝ≥0∞)) =ᵐ[μ] 0,
+  { filter_upwards [h_zero_norm, L1σ.coe_fn_zero E m μ] with x hx hx0,
+    rw [pi.zero_apply, ennreal.coe_eq_zero, nnnorm_eq_zero] at hx,
+    rw hx0,
+    exact hx, },
+  rwa lintegral_eq_zero_iff' at h,
+  exact ae_strongly_measurable.ennnorm hf_int.ae_strongly_measurable,
+end
+
+lemma L1σ_enorm_fun_add_le (f g : α →₁σ[μ, m] E) :
+  L1σ_enorm_fun (f + g) ≤ L1σ_enorm_fun f + L1σ_enorm_fun g :=
+begin
+  by_cases hf : integrable f μ,
+  { by_cases hg : integrable g μ,
+    { have hfg : integrable ⇑(f + g) μ := (hf.add hg).congr (L1σ.coe_fn_add f g).symm,
+      simp only [hf, hg, hfg, L1σ_enorm_fun_of_integrable],
+      rw ← lintegral_add_left' (ae_strongly_measurable.ennnorm hf.ae_strongly_measurable),
+      refine lintegral_mono_ae _,
+      filter_upwards [L1σ.coe_fn_add f g] with x hx,
+      norm_cast,
+      rw [hx, pi.add_apply],
+      exact nnnorm_add_le _ _, },
+    { simp only [hg, L1σ_enorm_fun_undef, not_false_iff, ennreal.add_top, le_top], }, },
+  { simp only [hf, L1σ_enorm_fun_undef, not_false_iff, ennreal.top_add, le_top], },
+end
+
+lemma L1σ_enorm_fun_smul_le (c : ℝ) (f : α →₁σ[μ, m] E) :
+  L1σ_enorm_fun (c • f) ≤ ∥c∥₊ * L1σ_enorm_fun f :=
+begin
+  by_cases hf : integrable f μ,
+  { have hcf : integrable ⇑(c • f) μ := (hf.smul c).congr (L1σ.coe_fn_smul c f).symm,
+    rw [L1σ_enorm_fun_of_integrable f hf, L1σ_enorm_fun_of_integrable _ hcf],
+    rw ← lintegral_const_mul' _ _ ennreal.coe_ne_top,
+    refine lintegral_mono_ae _,
+    filter_upwards [L1σ.coe_fn_smul c f] with x hx,
+    norm_cast,
+    rw [hx, pi.smul_apply, nnnorm_smul], },
+  { by_cases hc : c = 0,
+    { simp only [hc, zero_smul, L1σ_enorm_fun_zero, nnnorm_zero, ennreal.coe_zero, zero_mul,
+        nonpos_iff_eq_zero], },
+    simp only [hf, hc, L1σ_enorm_fun_undef, not_false_iff, with_top.mul_top, ne.def,
+      ennreal.coe_eq_zero, nnnorm_eq_zero, le_top], },
+end
+
+noncomputable
+def L1σ.enorm : enorm ℝ (α →₁σ[μ, m] E) :=
+{ to_fun := L1σ_enorm_fun,
+  eq_zero' := λ f, L1σ_enorm_fun_eq_zero,
+  map_add_le' := L1σ_enorm_fun_add_le,
+  map_smul_le' := L1σ_enorm_fun_smul_le, }
+
+variables (E m μ)
+
+/-- TODO: this is linearly isometric to L1 -/
+noncomputable
+def L1σ_finite : subspace ℝ (α →₁σ[μ, m] E) := L1σ.enorm.finite_subspace
+
+variables {E m μ}
+
+noncomputable instance : normed_group (L1σ_finite E m μ) :=
+enorm.finite_subspace.normed_group L1σ.enorm
+
+noncomputable instance : normed_space ℝ (L1σ_finite E m μ) :=
+enorm.finite_subspace.normed_space L1σ.enorm
+
+noncomputable instance : emetric_space (α →₁σ[μ, m] E) := L1σ.enorm.emetric_space
+
+lemma enorm_apply (f : α →₁σ[μ, m] E) :
+  L1σ.enorm f = @ite _ (integrable f μ) (classical.dec (integrable f μ)) (∫⁻ x, ∥f x∥₊ ∂μ) ∞ :=
+rfl
+
+lemma enorm_lt_top_iff_integrable (f : α →₁σ[μ, m] E) :
+  L1σ.enorm f < ∞ ↔ integrable f μ :=
+begin
+  rw enorm_apply f,
+  classical,
+  by_cases hf : integrable f μ,
+  { simp only [hf, if_true, iff_true],
+    exact hf.has_finite_integral, },
+  { simp only [hf, if_false, not_top_lt], },
+end
+
+lemma integrable.enorm_lt_top {f : α →ₘ[μ] E} (hf : integrable f μ) :
+  L1σ.enorm ⟨f, hf.sigma_integrable m⟩ < ∞ :=
+by { rw enorm_lt_top_iff_integrable, exact hf, }
+
+lemma L1σ_finite.integrable (f : L1σ_finite E m μ) : integrable f μ :=
+begin
+  suffices : integrable (f : α →₁σ[μ, m] E) μ,
+  { refine integrable.congr this _,
+    rw ← coe_fn_coe_base, },
+  rw ← enorm_lt_top_iff_integrable,
+  exact f.prop,
+end
+
+lemma L1σ_finite.norm_eq_lintegral (f : L1σ_finite E m μ) :
+  ∥f∥ = (∫⁻ x, ∥f x∥₊ ∂μ).to_real :=
+begin
+  rw enorm.finite_norm_eq,
+  congr,
+  rw enorm_apply,
+  have hf : integrable (f : α →₁σ[μ, m] E) μ := L1σ_finite.integrable f,
+  simp only [hf, if_true],
+  simp_rw ← coe_fn_coe_base,
+end
+
+end emetric_space
+
+section L1_to_L1σ
+
+variables [normed_space ℝ E]
+
+def L1_to_L1σ_finite_lie (m : measurable_space α) [hm : fact (m ≤ m0)] :
+  (α →₁[μ] E) ≃ₗᵢ[ℝ] L1σ_finite E m μ :=
+{ to_fun := λ f, ⟨⟨f, (L1.integrable_coe_fn f).sigma_integrable m⟩,
+    (L1.integrable_coe_fn f).enorm_lt_top⟩,
+  map_add' := λ f g, by { sorry, },
+  map_smul' := sorry,
+  inv_fun := sorry,
+  left_inv := sorry,
+  right_inv := sorry,
+  norm_map' := sorry, }
+
+def L1_to_L1σ (m : measurable_space α) [hm : fact (m ≤ m0)] :
+  (α →₁[μ] E) →L[ℝ] (α →₁σ[μ, m] E) :=
+{ to_fun := λ f, ⟨f, (L1.integrable_coe_fn f).sigma_integrable m⟩,
+  map_add' := sorry,
+  map_smul' := sorry,
+  cont := sorry, }
+
+end L1_to_L1σ
 
 end measure_theory

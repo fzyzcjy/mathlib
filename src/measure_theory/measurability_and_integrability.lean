@@ -5,6 +5,7 @@ Authors: Rémy Degenne
 -/
 
 import measure_theory.function.draft
+import measure_theory.function.uniform_integrable
 
 /-!
 # Measurability And Integrability in mathlib
@@ -30,19 +31,22 @@ function.
 
 ## Integrability
 
+* `mem_ℒp f p μ`
 * `integrable f μ`
 * `sigma_integrable m f μ`
-* `mem_ℒp f p μ`
+* `unif_integrable f p μ`
+* `uniform_integrable f p μ`
 
 -/
 
 open measure_theory topological_space
+open_locale ennreal
 
-variables {α β : Type*} {m m₀ : measurable_space α} {μ : measure α} {f : α → β}
+variables {ι α β : Type*} {m m₀ : measurable_space α} {μ : measure α} {f : α → β} {p : ℝ≥0∞}
 
 include m₀
 
-/-! ### Measurability notions -/
+/-! ### Measurability -/
 
 /-- A strongly measurable function is a.e. strongly measurable. -/
 example [topological_space β] :
@@ -75,6 +79,13 @@ example [topological_space β] [has_zero β] [sigma_finite μ] :
 ⟨fin_strongly_measurable.strongly_measurable,
   λ h, strongly_measurable.fin_strongly_measurable h μ⟩
 
+/-- In a metrizable, second-countable borel space, strongly measurable and measurable are
+equivalent. -/
+example [topological_space β] [measurable_space β] [metrizable_space β] [borel_space β]
+  [second_countable_topology β] :
+  strongly_measurable f ↔ measurable f :=
+strongly_measurable_iff_measurable
+
 /-! ### Integrability -/
 
 example [normed_group β] :
@@ -98,3 +109,15 @@ example [normed_group β] (hm : m ≤ m₀) :
 example [normed_group β] [measurable_space β] [borel_space β] [sigma_finite μ] :
   sigma_integrable m₀ f μ ↔ ae_strongly_measurable f μ :=
 ⟨λ h, sigma_integrable.ae_strongly_measurable h le_rfl, ae_strongly_measurable.sigma_integrable⟩
+
+example [normed_group β] {f : ι → α → β} :
+  uniform_integrable f p μ → unif_integrable f p μ :=
+uniform_integrable.unif_integrable
+
+example [normed_group β] {f : ι → α → β} :
+  uniform_integrable f p μ → ∀ i, strongly_measurable (f i) :=
+uniform_integrable.strongly_measurable
+
+example [normed_group β] {f : ι → α → β} :
+  uniform_integrable f p μ → ∀ i, mem_ℒp (f i) p μ :=
+uniform_integrable.mem_ℒp

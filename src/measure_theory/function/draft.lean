@@ -41,12 +41,9 @@ begin
     exact (Lp.coe_fn_add _ _).trans (eventually_eq.rfl.add h), },
 end
 
-def L1_to_L1σ (f : α →₁[μ] E) (m : measurable_space α) : α →₁σ[μ, m] E :=
-⟨f, (L1.integrable_coe_fn f).sigma_integrable m⟩
-
 lemma set_to_L1σ_eq_set_to_L1 (hT : dominated_fin_meas_additive μ T C) (hm : m ≤ m0)
   (f : α →₁[μ] E) :
-  set_to_L1σ μ T hT hm (L1_to_L1σ f m) = L1.set_to_L1 hT f :=
+  set_to_L1σ μ T hT hm (L1_to_L1σ m f) = L1.set_to_L1 hT f :=
 begin
   sorry,
 end
