@@ -710,8 +710,6 @@ end normed_space
 
 section emetric_space
 
-variables [normed_space ℝ E]
-
 noncomputable
 def L1σ_enorm_fun (f : α →₁σ[μ, m] E) : ℝ≥0∞ :=
 @ite _ (integrable f μ) (classical.dec (integrable f μ)) (∫⁻ x, ∥f x∥₊ ∂μ) ∞
@@ -766,6 +764,8 @@ begin
     { simp only [hg, L1σ_enorm_fun_undef, not_false_iff, ennreal.add_top, le_top], }, },
   { simp only [hf, L1σ_enorm_fun_undef, not_false_iff, ennreal.top_add, le_top], },
 end
+
+variables [normed_space ℝ E]
 
 lemma L1σ_enorm_fun_smul_le (c : ℝ) (f : α →₁σ[μ, m] E) :
   L1σ_enorm_fun (c • f) ≤ ∥c∥₊ * L1σ_enorm_fun f :=
@@ -853,23 +853,36 @@ section L1_to_L1σ
 
 variables [normed_space ℝ E]
 
-def L1_to_L1σ_finite_lie (m : measurable_space α) [hm : fact (m ≤ m0)] :
+variables (E m μ)
+
+def L1_to_L1σ_finite_lie :
   (α →₁[μ] E) ≃ₗᵢ[ℝ] L1σ_finite E m μ :=
 { to_fun := λ f, ⟨⟨f, (L1.integrable_coe_fn f).sigma_integrable m⟩,
     (L1.integrable_coe_fn f).enorm_lt_top⟩,
-  map_add' := λ f g, by { sorry, },
-  map_smul' := sorry,
-  inv_fun := sorry,
-  left_inv := sorry,
-  right_inv := sorry,
-  norm_map' := sorry, }
+  map_add' := λ f g, rfl,
+  map_smul' := λ c f, rfl,
+  inv_fun := λ f, ⟨(f : α →ₘ[μ] E),
+    by { rw [Lp.mem_Lp_iff_mem_ℒp, mem_ℒp_one_iff_integrable], exact L1σ_finite.integrable f, }⟩,
+  left_inv := λ f, by simp only [coe_coe, subtype.coe_mk, set_like.eta],
+  right_inv := λ f, by simp only [coe_coe, Lp.coe_mk, set_like.eta],
+  norm_map' := λ f,
+    by { simp only [linear_equiv.coe_mk, L1σ_finite.norm_eq_lintegral, L1.norm_def], congr, } }
 
-def L1_to_L1σ (m : measurable_space α) [hm : fact (m ≤ m0)] :
+variables {E m μ}
+
+/-- TODO: replace the current subtypeL by this. -/
+def subtypeL {E : Type*} [topological_space E] [add_comm_monoid E] {R' : Type*}
+  [ring R'] [module R' E] (p : submodule R' E) :
+↥p →L[R'] E :=
+{ to_fun    := λ f, f,
+  map_add'  := λ f g, rfl,
+  map_smul' := λ c f, rfl, }
+
+noncomputable
+def L1_to_L1σ (m : measurable_space α) :
   (α →₁[μ] E) →L[ℝ] (α →₁σ[μ, m] E) :=
-{ to_fun := λ f, ⟨f, (L1.integrable_coe_fn f).sigma_integrable m⟩,
-  map_add' := sorry,
-  map_smul' := sorry,
-  cont := sorry, }
+(subtypeL (L1σ_finite E m μ)).comp
+  (L1_to_L1σ_finite_lie E m μ).to_linear_isometry.to_continuous_linear_map
 
 end L1_to_L1σ
 
