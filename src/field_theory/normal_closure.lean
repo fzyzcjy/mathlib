@@ -1,6 +1,7 @@
 import field_theory.normal
 import field_theory.is_alg_closed.algebraic_closure
 import field_theory.fixed
+import field_theory.primitive_element
 
 section intermediate_field_constructions
 
@@ -31,19 +32,6 @@ section technical_lemmas
 
 variables {F K L : Type*} [field F] [field K] [field L] [algebra F K] [algebra F L]
 
-instance alg_hom.finite_of_finite_dimensional [finite_dimensional F K] : finite (K →ₐ[F] L) :=
-begin
-  suffices : finite ((⊤ : intermediate_field F K) →ₐ[F] L),
-  { exactI finite.of_equiv _ (intermediate_field.top_equiv.arrow_congr alg_equiv.refl) },
-  apply intermediate_field.induction_on_adjoin (λ E : intermediate_field F K, finite (E →ₐ[F] L)),
-  { haveI : subsingleton (F →ₐ[F] L) := alg_hom.subsingleton,
-    exact finite.of_equiv _ ((intermediate_field.bot_equiv F K).symm.arrow_congr alg_equiv.refl) },
-  { intros E x hE,
-    haveI := λ f : E →ₐ[F] L, @intermediate_field.fintype_of_alg_hom_adjoin_integral
-      E _ K _ _ x L _ f.to_ring_hom.to_algebra (algebra.is_integral_of_finite E K x),
-    exact finite.of_equiv _ (@alg_hom_equiv_sigma F E E⟮x⟯ L _ _ _ _ _ _ _ _ _).symm },
-end
-
 instance intermediate_field.finite_dimensional_supr_of_finite
   {ι : Type*} {t : ι → intermediate_field F K} [h : finite ι] [Π i, finite_dimensional F (t i)] :
   finite_dimensional F (⨆ i, t i : intermediate_field F K) :=
@@ -64,6 +52,19 @@ end
 
 end technical_lemmas
 
+section more_technical_lemmas
+
+variables {F K : Type*} [field F] [field K] [algebra F K]
+
+instance intermediate_field.normal_supr
+  {ι : Type*} {t : ι → intermediate_field F K} [h : finite ι] [Π i, normal F (t i)] :
+  normal F (⨆ i, t i : intermediate_field F K) :=
+begin
+  sorry
+end
+
+end more_technical_lemmas
+
 section normal_closure
 
 variables (F K L : Type*) [field F] [field K] [field L] [algebra F K] [algebra K L] [algebra F L]
@@ -73,7 +74,7 @@ variables (F K L : Type*) [field F] [field K] [field L] [algebra F K] [algebra K
 noncomputable! def normal_closure : intermediate_field K L :=
 { algebra_map_mem' := λ r, le_supr (λ f : K →ₐ[F] L, f.field_range)
     (is_scalar_tower.to_alg_hom F K L) ⟨r, rfl⟩,
-  .. (supr (λ f : K →ₐ[F] L, f.field_range)).to_subfield }
+  .. (⨆ f : K →ₐ[F] L, f.field_range).to_subfield }
 
 example : is_scalar_tower F K (normal_closure F K L) := by apply_instance
 
@@ -81,6 +82,7 @@ namespace normal_closure
 
 instance is_normal [h : normal F L] : normal F (normal_closure F K L) :=
 begin
+  -- change normal F (⨆ f : K →ₐ[F] L, f.field_range : intermediate_field F L),
   sorry,
 end
 
@@ -89,24 +91,14 @@ instance is_finite_dimensional [finite_dimensional F K] :
 begin
   haveI : ∀ f : K →ₐ[F] L, finite_dimensional F f.field_range :=
   λ f, f.to_linear_map.finite_dimensional_range,
-  have : finite_dimensional F (supr (λ f : K →ₐ[F] L, f.field_range) : intermediate_field F L),
-  apply_instance,
-  exact this,
+  apply intermediate_field.finite_dimensional_supr_of_finite,
 end
 
 end normal_closure
 
 end normal_closure
 
-
-
-
-
-
-
-
-
-namespace intermediate_field
+/-namespace intermediate_field
 
 variables {F L : Type*} [field F] [field L] [algebra F L] (K : intermediate_field F L)
 
@@ -167,4 +159,4 @@ variables (F K L : Type*) [field F] [field K] [field L] [algebra F K] [algebra K
 noncomputable def normal_closure : intermediate_field K L :=
 sorry
 
-end normal_closure
+end normal_closure-/
