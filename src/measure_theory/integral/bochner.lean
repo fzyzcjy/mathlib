@@ -833,16 +833,7 @@ lemma tendsto_integral_of_L1 {ι} (f : α → E) (hfi : integrable f μ)
   {F : ι → α → E} {l : filter ι} (hFi : ∀ᶠ i in l, integrable (F i) μ)
   (hF : tendsto (λ i, ∫⁻ x, ∥F i x - f x∥₊ ∂μ) l (𝓝 0)) :
   tendsto (λ i, ∫ x, F i x ∂μ) l (𝓝 $ ∫ x, f x ∂μ) :=
-begin
-  rw [tendsto_iff_norm_tendsto_zero],
-  replace hF : tendsto (λ i, ennreal.to_real $ ∫⁻ x, ∥F i x - f x∥₊ ∂μ) l (𝓝 0) :=
-    (ennreal.tendsto_to_real zero_ne_top).comp hF,
-  refine squeeze_zero_norm' (hFi.mp $ hFi.mono $ λ i hFi hFm, _) hF,
-  simp only [norm_norm, ← integral_sub hFi hfi],
-  convert norm_integral_le_lintegral_norm (λ x, F i x - f x),
-  ext1 x,
-  exact coe_nnreal_eq _
-end
+tendsto_set_to_fun_of_L1 (dominated_fin_meas_additive_weighted_smul μ) f hfi hFi hF
 
 /-- Lebesgue dominated convergence theorem provides sufficient conditions under which almost
   everywhere convergence of a sequence of functions implies the convergence of their integrals.
