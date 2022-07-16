@@ -16,11 +16,10 @@ def alg_hom.field_range : intermediate_field F L :=
 noncomputable def alg_hom.equiv_field_range (f : L' →ₐ[F] L) : L' ≃ₐ[F] f.field_range :=
 alg_equiv.of_injective f f.to_ring_hom.injective
 
-def intermediate_field.comap :
-  intermediate_field F L' :=
+def intermediate_field.comap : intermediate_field F L' :=
 { inv_mem' := λ x hx, show f x⁻¹ ∈ S, from (f.map_inv x).symm ▸ S.inv_mem hx,
-  neg_mem' := λ x hx, (S.to_subalgebra.comap' f).neg_mem hx,
-  .. S.to_subalgebra.comap' f }
+  neg_mem' := λ x hx, (S.to_subalgebra.comap f).neg_mem hx,
+  .. S.to_subalgebra.comap f }
 
 variables {S T f}
 
@@ -35,24 +34,6 @@ end intermediate_field_constructions
 section technical_lemmas
 
 variables {K L : Type*} [field K] [field L] [algebra K L]
-
-instance intermediate_field.finite_dimensional_supr_of_finite
-  {ι : Type*} {t : ι → intermediate_field K L} [h : finite ι] [Π i, finite_dimensional K (t i)] :
-  finite_dimensional K (⨆ i, t i : intermediate_field K L) :=
-begin
-  rw ← supr_univ,
-  let P : set ι → Prop := λ s, finite_dimensional K (⨆ i ∈ s, t i : intermediate_field K L),
-  change P set.univ,
-  apply set.finite.induction_on,
-  { exact set.finite_univ },
-  all_goals { dsimp only [P] },
-  { rw supr_emptyset,
-    exact (intermediate_field.bot_equiv K L).symm.to_linear_equiv.finite_dimensional },
-  { intros _ s _ _ hs,
-    rw supr_insert,
-    haveI : finite_dimensional K (⨆ i ∈ s, t i : intermediate_field K L) := hs,
-    apply intermediate_field.finite_dimensional_sup },
-end
 
 instance intermediate_field.finite_dimensional_supr_of_mem_finset
   {ι : Type*} {f : ι → intermediate_field K L} {s : finset ι}
@@ -172,7 +153,7 @@ instance is_finite_dimensional [finite_dimensional F K] :
 begin
   haveI : ∀ f : K →ₐ[F] L, finite_dimensional F f.field_range :=
   λ f, f.to_linear_map.finite_dimensional_range,
-  apply intermediate_field.finite_dimensional_supr_of_finite,
+  apply intermediate_field.intermediate_field.finite_dimensional_supr_of_finite,
 end
 
 end normal_closure
@@ -185,8 +166,8 @@ variables {F L : Type*} [field F] [field L] [algebra F L] (K : intermediate_fiel
 
 /-- The relative normal closure of `K` in `L`. -/
 noncomputable def rel_normal_closure (K : intermediate_field F L) : intermediate_field F L :=
-((normal_closure F K (algebraic_closure L)).comap (is_scalar_tower.to_alg_hom K L
-  (algebraic_closure L))).lift2
+restrict_scalars F ((normal_closure F K (algebraic_closure L)).comap
+  (is_scalar_tower.to_alg_hom K L (algebraic_closure L)))
 
 lemma le_rel_normal_closure : K ≤ K.rel_normal_closure :=
 sorry

@@ -39,9 +39,6 @@ namespace intermediate_field
 
 open set
 
-lemma adjoin_simple_le_iff {x : L} {F : intermediate_field K L} : K⟮x⟯ ≤ F ↔ x ∈ F :=
-adjoin_le_iff.trans set.singleton_subset_iff
-
 /-- Adjoining a finite element is compact in the lattice of intermediate fields. -/
 lemma adjoin_simple_is_compact_element (x : L) : complete_lattice.is_compact_element K⟮x⟯ :=
 begin
