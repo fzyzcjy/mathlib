@@ -13,6 +13,9 @@ def alg_hom.field_range : intermediate_field F L :=
 { .. f.range,
   .. f.to_ring_hom.field_range }
 
+lemma field_range_eq_map_top : f.field_range = (⊤ : intermediate_field F L').map f :=
+sorry
+
 noncomputable def alg_hom.equiv_field_range (f : L' →ₐ[F] L) : L' ≃ₐ[F] f.field_range :=
 alg_equiv.of_injective f f.to_ring_hom.injective
 
@@ -177,3 +180,41 @@ lemma rel_normal_closure_idem :
 sorry
 
 end intermediate_field
+
+section fancy_way
+
+theorem thm1 {F K L : Type*} [field F] [field K] [field L] [algebra F K] [algebra F L] [normal F K]
+  (f g : K →ₐ[F] L) : f.field_range = g.field_range :=
+begin
+  sorry
+end
+
+theorem thm2 (F K L : Type*) [field F] [field K] [field L] [algebra F K] [algebra F L]
+  [is_alg_closed L] (h : ∀ f g : K →ₐ[F] L, f.field_range ≤ g.field_range) : normal F K :=
+begin
+  sorry
+end
+
+lemma alg_hom.map_supr {F K L : Type*} [field F] [field K] [field L] [algebra F K]
+  [algebra F L] {ι : Type*} (t : ι → intermediate_field F K) (f : K →ₐ[F] L) :
+  (⨆ i, t i).map f = ⨆ i, (t i).map f :=
+sorry
+
+instance intermediate_field.normal_supr'
+  {K L : Type*} [field K] [field L] [algebra K L]
+  {ι : Type*} {t : ι → intermediate_field K L} [Π i, normal K (t i)] :
+  normal K (⨆ i, t i : intermediate_field K L) :=
+begin
+  refine thm2 K (⨆ i, t i : intermediate_field K L) (algebraic_closure K) (λ f g, _),
+  let u : ι → intermediate_field K (⨆ i, t i : intermediate_field K L) :=
+  λ i, sorry,
+  have key1 : (⊤ : intermediate_field K (⨆ i, t i : intermediate_field K L)) = ⨆ i, u i :=
+  sorry,
+  have key2 : ∀ i, (u i).map f = (u i).map g := sorry,
+  rw [field_range_eq_map_top, key1, alg_hom.map_supr, supr_le_iff],
+  intros i,
+  rw key2,
+  have key := alg_hom.lift_normal,
+end
+
+end fancy_way
