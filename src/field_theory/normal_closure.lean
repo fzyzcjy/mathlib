@@ -52,6 +52,16 @@ begin
   apply_instance,
 end
 
+lemma intermediate_field.exists_finset_of_mem_supr
+  {ι : Type*} {f : ι → intermediate_field K L} {x : L} (hx : x ∈ ⨆ i, f i) :
+  ∃ s : finset ι, x ∈ ⨆ i ∈ s, f i :=
+begin
+  have := complete_lattice.is_compact_element.exists_finset_of_le_supr
+    (intermediate_field K L) (intermediate_field.adjoin_simple_is_compact_element x) f,
+  simp only [intermediate_field.adjoin_simple_le_iff] at this,
+  exact this hx,
+end
+
 end technical_lemmas
 
 section the_really_technical_lemmas
