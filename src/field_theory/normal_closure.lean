@@ -135,19 +135,14 @@ instance key_instance {x : L} [h : normal K L] : (minpoly K x).is_splitting_fiel
 key_instance' (h.splits x)
 
 instance intermediate_field.normal_supr
-  {ι : Type*} {t : ι → intermediate_field K L} [Π i, normal K (t i)] :
+  {ι : Type*} {t : ι → intermediate_field K L} [h : Π i, normal K (t i)] :
   normal K (⨆ i, t i : intermediate_field K L) :=
 begin
-  split,
-  { -- wait for the normal refactor
-    sorry },
-  { intro x,
-    obtain ⟨s, hs⟩ := key_lemma _ x.2,
-    { -- suffices to show that `minpoly K x` splits in the smaller `intermediate_field`
-      -- but the smaller `intermediate_field` is a splitting field, and hence normal
-      sorry },
-    { -- wait for the normal refactor
-      sorry } },
+  refine ⟨intermediate_field.intermediate_field.is_algebraic_supr (λ i, (h i).1), λ x, _⟩,
+  obtain ⟨s, hs⟩ := key_lemma (λ i, (h i).1) x.2,
+  -- suffices to show that `minpoly K x` splits in the smaller `intermediate_field`
+  -- but the smaller `intermediate_field` is a splitting field, and hence normal
+  sorry,
 end
 
 end more_technical_lemmas
