@@ -2,7 +2,6 @@ import field_theory.normal
 import field_theory.is_alg_closed.algebraic_closure
 import field_theory.fixed
 import field_theory.primitive_element
-import field_theory.algebraic_lattice
 
 section intermediate_field_constructions
 
@@ -38,42 +37,51 @@ section technical_lemmas
 
 variables {K L : Type*} [field K] [field L] [algebra K L]
 
-instance intermediate_field.finite_dimensional_supr_of_mem_finset
-  {ι : Type*} {f : ι → intermediate_field K L} {s : finset ι}
-  [h : Π i ∈ s, finite_dimensional K (f i)] :
-  finite_dimensional K (⨆ i ∈ s, f i : intermediate_field K L) :=
-begin
-  let t : {i // i ∈ s} → intermediate_field K L := λ i, f i,
-  haveI : Π i, finite_dimensional K (t i) := λ i, h i i.2,
-  have : (⨆ i ∈ s, f i) = ⨆ i, t i :=
-  le_antisymm (supr_le (λ i, supr_le (λ h, le_supr t ⟨i, h⟩)))
-    (supr_le (λ i, le_supr_of_le i (le_supr_of_le i.2 le_rfl))),
-  rw this,
-  apply_instance,
-end
-
-lemma intermediate_field.exists_finset_of_mem_supr
-  {ι : Type*} {f : ι → intermediate_field K L} {x : L} (hx : x ∈ ⨆ i, f i) :
-  ∃ s : finset ι, x ∈ ⨆ i ∈ s, f i :=
-begin
-  have := complete_lattice.is_compact_element.exists_finset_of_le_supr
-    (intermediate_field K L) (intermediate_field.adjoin_simple_is_compact_element x) f,
-  simp only [intermediate_field.adjoin_simple_le_iff] at this,
-  exact this hx,
-end
-
 end technical_lemmas
 
-section the_really_technical_lemmas
+namespace intermediate_field
+
+variables {F E : Type*} [field F] [field E] [algebra F E]
+
+lemma is_algebraic_algebra_map_iff {R A B : Type*} [comm_ring R] [comm_ring A]
+  [ring B] [algebra R A] [algebra A B] [algebra R B] [is_scalar_tower R A B] {x : A}
+  (hx : function.injective (algebra_map A B)) :
+  is_algebraic R (algebra_map A B x) ↔ is_algebraic R x :=
+⟨λ ⟨p, hp0, hp⟩, ⟨p, hp0, hx (by rwa [map_zero, ←is_scalar_tower.to_alg_hom_apply R A B,
+  ←polynomial.aeval_alg_hom_apply, is_scalar_tower.to_alg_hom_apply R A B])⟩,
+  is_algebraic_algebra_map_of_is_algebraic⟩
+
+lemma algebraic_iff {K : intermediate_field F E} {x : K} :
+  is_algebraic F x ↔ is_algebraic F (x : E) :=
+(is_algebraic_algebra_map_iff (algebra_map K E).injective).symm
+
+lemma key_alg_lemma {ι : Type*} {f : ι → intermediate_field F E} {x : E} (hx : x ∈ ⨆ i, f i) :
+  ∃ s : finset (Σ i, f i), x ∈ ⨆ i ∈ s, F⟮(i.2 : E)⟯ :=
+intermediate_field.exists_finset_of_mem_supr
+  (set_like.le_def.mp (supr_le (λ i x h, set_like.le_def.mp (le_supr_of_le ⟨i, x, h⟩ le_rfl)
+    (intermediate_field.mem_adjoin_simple_self F x))) hx)
+
+lemma intermediate_field.is_algebraic_supr
+  {ι : Type*} {t : ι → intermediate_field F E} (h : ∀ i, algebra.is_algebraic F (t i)) :
+  algebra.is_algebraic F (⨆ i, t i : intermediate_field F E) :=
+begin
+  rintros ⟨x, hx⟩,
+  obtain ⟨s, hs⟩ := key_alg_lemma hx,
+  haveI : ∀ i : (Σ i, t i), finite_dimensional F F⟮(i.2 : E)⟯,
+  { rintros ⟨i, x⟩,
+    specialize h i x,
+    rw [intermediate_field.algebraic_iff, is_algebraic_iff_is_integral] at h,
+    exact intermediate_field.adjoin.finite_dimensional h },
+  have := algebra.is_algebraic_of_finite F
+    (⨆ i ∈ s, F⟮(i.2 : E)⟯ : intermediate_field F E) ⟨x, hs⟩,
+  rwa [intermediate_field.algebraic_iff, subtype.coe_mk] at this ⊢,
+end
+
+end intermediate_field
+
+section more_technical_lemmas
 
 variables {K L : Type*} [field K] [field L] [algebra K L]
-
-lemma intermediate_field.algebraic_iff {F : intermediate_field K L} {x : F} :
-  is_algebraic K x ↔ is_algebraic K (x : L) :=
-begin
-  rw [is_algebraic_iff_is_integral, is_algebraic_iff_is_integral],
-  exact (is_integral_algebra_map_iff (algebra_map F L).injective).symm,
-end
 
 lemma key_lemma {ι : Type*} {f : ι → intermediate_field K L}
   (h : ∀ i, algebra.is_algebraic K (f i)) {x : L} (hx : x ∈ ⨆ i, f i) :
@@ -91,34 +99,6 @@ end
 instance key_instance {x : L} [normal K L] : (minpoly K x).is_splitting_field K
   (intermediate_field.adjoin K ((minpoly K x).root_set L)) :=
 sorry
-
-end the_really_technical_lemmas
-
-section more_technical_lemmas
-
-variables {K L : Type*} [field K] [field L] [algebra K L]
-
-lemma key_alg_lemma {ι : Type*} {f : ι → intermediate_field K L} {x : L} (hx : x ∈ ⨆ i, f i) :
-  ∃ s : finset (Σ i, f i), x ∈ ⨆ i ∈ s, K⟮(i.2 : L)⟯ :=
-intermediate_field.exists_finset_of_mem_supr
-  (set_like.le_def.mp (supr_le (λ i x h, set_like.le_def.mp (le_supr_of_le ⟨i, x, h⟩ le_rfl)
-    (intermediate_field.mem_adjoin_simple_self K x))) hx)
-
-lemma intermediate_field.is_algebraic_supr
-  {ι : Type*} {t : ι → intermediate_field K L} (h : ∀ i, algebra.is_algebraic K (t i)) :
-  algebra.is_algebraic K (⨆ i, t i : intermediate_field K L) :=
-begin
-  rintros ⟨x, hx⟩,
-  obtain ⟨s, hs⟩ := key_alg_lemma hx,
-  haveI : ∀ i : (Σ i, t i), finite_dimensional K K⟮(i.2 : L)⟯,
-  { rintros ⟨i, x⟩,
-    specialize h i x,
-    rw [intermediate_field.algebraic_iff, is_algebraic_iff_is_integral] at h,
-    exact intermediate_field.adjoin.finite_dimensional h },
-  have := algebra.is_algebraic_of_finite K
-    (⨆ i ∈ s, K⟮(i.2 : L)⟯ : intermediate_field K L) ⟨x, hs⟩,
-  rwa [intermediate_field.algebraic_iff, subtype.coe_mk] at this ⊢,
-end
 
 instance intermediate_field.normal_supr
   {ι : Type*} {t : ι → intermediate_field K L} [Π i, normal K (t i)] :
@@ -166,7 +146,7 @@ instance is_finite_dimensional [finite_dimensional F K] :
 begin
   haveI : ∀ f : K →ₐ[F] L, finite_dimensional F f.field_range :=
   λ f, f.to_linear_map.finite_dimensional_range,
-  apply intermediate_field.intermediate_field.finite_dimensional_supr_of_finite,
+  apply intermediate_field.finite_dimensional_supr_of_finite,
 end
 
 end normal_closure
