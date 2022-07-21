@@ -96,9 +96,43 @@ begin
   exact is_algebraic_iff_is_integral.mp (intermediate_field.algebraic_iff.mp (h i ⟨x, hx⟩)),
 end
 
-instance key_instance {x : L} [normal K L] : (minpoly K x).is_splitting_field K
+lemma key_instance' {p : polynomial K} (hp : p.splits (algebra_map K L)) :
+  p.is_splitting_field K (intermediate_field.adjoin K (p.root_set L)) :=
+begin
+  by_cases hp0 : p = 0,
+  { rw [hp0, polynomial.root_set_zero, intermediate_field.adjoin_empty],
+    refine ⟨polynomial.splits_zero (algebra_map K (⊥ : intermediate_field K L)), _⟩,
+    sorry },
+  refine ⟨_, _⟩,
+  { sorry },
+  { rw [←polynomial.root_set, eq_top_iff],
+    let f := is_scalar_tower.to_alg_hom K (intermediate_field.adjoin K (p.root_set L)) L,
+    let g := λ S, subalgebra.map S f,
+    have h0 : ∀ S T : subalgebra K (intermediate_field.adjoin K (p.root_set L)), S.map f ≤ T.map f → S ≤ T,
+    { -- should be a lemma
+      intros S T h x hx,
+      have key : ↑x ∈ S.map f := ⟨x, hx, rfl⟩,
+      obtain ⟨y, hy, heq⟩ := h key,
+      rwa ← (algebra_map (intermediate_field.adjoin K (p.root_set L)) L).injective heq },
+    refine h0 _ _ _,
+    rw algebra.map_top,
+    have key : f.range = algebra.adjoin K (p.root_set L),
+    { -- painful!
+      sorry },
+    rw key,
+    rw ← algebra.adjoin_algebra_map,
+    apply algebra.adjoin_mono,
+    intros x hx,
+    refine ⟨⟨x, intermediate_field.subset_adjoin K (p.root_set L) hx⟩, _, rfl⟩,
+    rw polynomial.mem_root_set hp0 at hx ⊢,
+    apply (algebra_map (intermediate_field.adjoin K (p.root_set L)) L).injective,
+    rw map_zero,
+    rwa is_scalar_tower.algebra_map_aeval },
+end
+
+instance key_instance {x : L} [h : normal K L] : (minpoly K x).is_splitting_field K
   (intermediate_field.adjoin K ((minpoly K x).root_set L)) :=
-sorry
+key_instance' (h.splits x)
 
 instance intermediate_field.normal_supr
   {ι : Type*} {t : ι → intermediate_field K L} [Π i, normal K (t i)] :
