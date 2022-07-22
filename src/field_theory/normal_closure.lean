@@ -106,9 +106,8 @@ lemma intermediate_field.splits_of_splits {p : polynomial K} {F : intermediate_f
 begin
   classical,
   simp_rw [root_set, finset.mem_coe, multiset.mem_to_finset] at hF,
-  refine (splits_iff_exists_multiset (algebra_map K F)).mpr
-    ⟨(p.map (algebra_map K L)).roots.map (λ x, if hx : x ∈ F then (⟨x, hx⟩ : F) else 0), _⟩,
-  apply map_injective (algebra_map F L) (algebra_map F L).injective,
+  refine (splits_iff_exists_multiset (algebra_map K F)).mpr ⟨(p.map (algebra_map K L)).roots.map
+    (λ x, if hx : x ∈ F then (⟨x, hx⟩ : F) else 0), map_injective _ (algebra_map F L).injective _⟩,
   simp_rw [polynomial.map_mul, polynomial.map_multiset_prod, multiset.map_map, map_C, map_map],
   refine (eq_prod_roots_of_splits hp).trans (congr_arg ((*) (C _))
     (congr_arg multiset.prod (multiset.map_congr rfl (λ x hx, _)))),
@@ -118,19 +117,16 @@ end
 
 def intermediate_field.of_is_field {R A : Type*} [field R] [field A] [algebra R A]
   {S : subalgebra R A} (hS : is_field S) : intermediate_field R A :=
-S.to_intermediate_field begin
-  intros x hx,
+S.to_intermediate_field $ λ x hx, begin
   by_cases hx0 : x = 0,
   { rw [hx0, inv_zero],
     exact S.zero_mem },
   letI hS' := hS.to_field,
   suffices : ((⟨x, hx⟩ : S)⁻¹ : A) = ((⟨x, hx⟩⁻¹ : S) : A),
-  { rw subtype.coe_mk at this,
-    rw this,
+  { rw [←subtype.coe_mk x hx, this],
     apply set_like.coe_mem },
   apply inv_eq_of_mul_eq_one_right,
-  rw [←subalgebra.coe_mul, subalgebra.coe_eq_one],
-  apply mul_inv_cancel,
+  rw [←subalgebra.coe_mul, mul_inv_cancel, subalgebra.coe_one],
   rwa [ne, subtype.ext_iff, subtype.coe_mk],
 end
 
@@ -207,6 +203,7 @@ begin
   { sorry },
   have key2: ∃ p, polynomial.is_splitting_field K F p,
   { -- prove that finite supr of splitting fields is splitting field for product
+    use ∏ x in s, minpoly K (x.2 : L),
     sorry },
   have key3 : (minpoly K x).splits (algebra_map K F),
   { obtain ⟨p, hp⟩ := key2,
