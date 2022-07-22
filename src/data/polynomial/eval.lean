@@ -401,7 +401,7 @@ end eval
 
 section comp
 
-/-- The composition of polynomials as a polynomial. -/
+/-- The composition of polynomials as a polynomial. So `(p.comp q)`(x)= p(q(x)). -/
 def comp (p q : R[X]) : R[X] := p.eval₂ C q
 
 lemma comp_eq_sum_left : p.comp q = p.sum (λ e a, C a * q ^ e) :=

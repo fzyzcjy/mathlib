@@ -12,7 +12,31 @@ import algebra.polynomial.big_operators
 /-!
 # Theory of univariate polynomials
 
-This file starts looking like the ring theory of $ R[X] $
+Roots, division by monics with remainder and so on, for polynomials, mostly over
+an integral domain.
+
+## Main definitions
+
+* `mod_by_monic_hom (q : R[X]) : R[X] →ₗ[R] R[X]`, the `R`-linear "reduce mod `q`" map
+(at least if `q` is monic)
+* If `R` is a domain then so is `R[X]` (this is an instance, so is dealt with
+    by the `[typeclass]` system)
+
+An API is made for `root_multiplicity`; for example
+`root_multiplicity_mul (hpq : p * q ≠ 0) :`
+  `root_multiplicity x (p * q) = root_multiplicity x p + root_multiplicity x q`
+and
+`root_multiplicity_add (hzero : p + q ≠ 0) :`
+  `min (root_multiplicity a p) (root_multiplicity a q) ≤ root_multiplicity a (p + q)`
+
+* `noncomputable def roots (p : R[X]) : multiset R` : the roots of `p` in `R`, counted
+with multiplicity. The multiset has size at most the degree of `p`, with equality for
+`p ≠ 0` if `R` is an algebraically closed field, but not in general.
+
+* `p.is_root a : Prop` : the predicate saying that p(a)=0.
+
+* `p.root_set A` if `p : R[X]` and `A` is an `R`-algebra; this is the subset of `A`
+consisting of the roots of (the pushforward to `S` of) `p`.
 
 -/
 
@@ -99,6 +123,7 @@ end comm_ring
 section no_zero_divisors
 variables [semiring R] [no_zero_divisors R] {p q : R[X]}
 
+/-- If `R` has no zero divisors then neither does `R[X]`. -/
 instance : no_zero_divisors R[X] :=
 { eq_zero_or_eq_zero_of_mul_eq_zero := λ a b h, begin
     rw [← leading_coeff_eq_zero, ← leading_coeff_eq_zero],
@@ -170,6 +195,7 @@ end no_zero_divisors
 section ring
 variables [ring R] [is_domain R] {p q : R[X]}
 
+/-- If `R` is a domain then so is R[X]`. -/
 instance : is_domain R[X] :=
 { ..polynomial.no_zero_divisors,
   ..polynomial.nontrivial, }
