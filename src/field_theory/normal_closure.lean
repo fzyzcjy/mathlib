@@ -96,38 +96,96 @@ begin
   exact is_algebraic_iff_is_integral.mp (intermediate_field.algebraic_iff.mp (h i ⟨x, hx⟩)),
 end
 
+open_locale big_operators
+
+open polynomial
+
+lemma intermediate_field.splits_of_splits {p : polynomial K} {F : intermediate_field K L}
+  (hp : p.splits (algebra_map K L)) (hF : ∀ x ∈ p.root_set L, x ∈ F) :
+  p.splits (algebra_map K F) :=
+begin
+  classical,
+  simp_rw [root_set, finset.mem_coe, multiset.mem_to_finset] at hF,
+  refine (splits_iff_exists_multiset (algebra_map K F)).mpr
+    ⟨(p.map (algebra_map K L)).roots.map (λ x, if hx : x ∈ F then (⟨x, hx⟩ : F) else 0), _⟩,
+  apply map_injective (algebra_map F L) (algebra_map F L).injective,
+  simp_rw [polynomial.map_mul, polynomial.map_multiset_prod, multiset.map_map, map_C, map_map],
+  refine (eq_prod_roots_of_splits hp).trans (congr_arg ((*) (C _))
+    (congr_arg multiset.prod (multiset.map_congr rfl (λ x hx, _)))),
+  rw [function.comp_app, function.comp_app, dif_pos (hF x hx), polynomial.map_sub, map_X, map_C],
+  refl,
+end
+
+def intermediate_field.of_is_field {R A : Type*} [field R] [field A] [algebra R A]
+  {S : subalgebra R A} (hS : is_field S) : intermediate_field R A :=
+S.to_intermediate_field begin
+  intros x hx,
+  by_cases hx0 : x = 0,
+  { rw [hx0, inv_zero],
+    exact S.zero_mem },
+  letI hS' := hS.to_field,
+  suffices : ((⟨x, hx⟩ : S)⁻¹ : A) = ((⟨x, hx⟩⁻¹ : S) : A),
+  { rw subtype.coe_mk at this,
+    rw this,
+    apply set_like.coe_mem },
+  apply inv_eq_of_mul_eq_one_right,
+  rw [←subalgebra.coe_mul, subalgebra.coe_eq_one],
+  apply mul_inv_cancel,
+  rwa [ne, subtype.ext_iff, subtype.coe_mk],
+end
+
+lemma intermediate_field.adjoin_algebraic_to_subalgebra
+  (S : set L) (hS : ∀ x ∈ S, is_algebraic K x) :
+  (intermediate_field.adjoin K S).to_subalgebra = algebra.adjoin K S :=
+begin
+  simp only [is_algebraic_iff_is_integral] at hS,
+  have : algebra.is_integral K (algebra.adjoin K S) :=
+  by rwa [←le_integral_closure_iff_is_integral, algebra.adjoin_le_iff],
+  have := is_field_of_is_integral_of_is_field' this (field.to_is_field K),
+  rw ← (intermediate_field.of_is_field this).eq_adjoin_of_eq_algebra_adjoin K S; refl,
+end
+
 lemma key_instance' {p : polynomial K} (hp : p.splits (algebra_map K L)) :
   p.is_splitting_field K (intermediate_field.adjoin K (p.root_set L)) :=
 begin
+  classical,
   by_cases hp0 : p = 0,
   { rw [hp0, polynomial.root_set_zero, intermediate_field.adjoin_empty],
-    refine ⟨polynomial.splits_zero (algebra_map K (⊥ : intermediate_field K L)), _⟩,
-    sorry },
-  refine ⟨_, _⟩,
-  { sorry },
-  { rw [←polynomial.root_set, eq_top_iff],
-    let f := is_scalar_tower.to_alg_hom K (intermediate_field.adjoin K (p.root_set L)) L,
-    let g := λ S, subalgebra.map S f,
-    have h0 : ∀ S T : subalgebra K (intermediate_field.adjoin K (p.root_set L)), S.map f ≤ T.map f → S ≤ T,
-    { -- should be a lemma
-      intros S T h x hx,
-      have key : ↑x ∈ S.map f := ⟨x, hx, rfl⟩,
-      obtain ⟨y, hy, heq⟩ := h key,
-      rwa ← (algebra_map (intermediate_field.adjoin K (p.root_set L)) L).injective heq },
-    refine h0 _ _ _,
-    rw algebra.map_top,
-    have key : f.range = algebra.adjoin K (p.root_set L),
-    { -- painful!
-      sorry },
-    rw key,
-    rw ← algebra.adjoin_algebra_map,
-    apply algebra.adjoin_mono,
+    haveI : subsingleton (subalgebra K (⊥ : intermediate_field K L)) :=
+    subsingleton_of_bot_eq_top (subalgebra.bot_eq_top_of_dim_eq_one (intermediate_field.dim_bot)),
+    exact ⟨polynomial.splits_zero _, subsingleton.elim _ _⟩ },
+  refine ⟨intermediate_field.splits_of_splits hp (intermediate_field.subset_adjoin K (p.root_set L)), _⟩,
+  rw [←polynomial.root_set, eq_top_iff],
+  let f := is_scalar_tower.to_alg_hom K (intermediate_field.adjoin K (p.root_set L)) L,
+  let g := λ S, subalgebra.map S f,
+  have h0 : ∀ S T : subalgebra K (intermediate_field.adjoin K (p.root_set L)), S.map f ≤ T.map f → S ≤ T,
+  { -- should be a lemma
+    intros S T h x hx,
+    have key : ↑x ∈ S.map f := ⟨x, hx, rfl⟩,
+    obtain ⟨y, hy, heq⟩ := h key,
+    rwa ← (algebra_map (intermediate_field.adjoin K (p.root_set L)) L).injective heq },
+  refine h0 _ _ _,
+  rw algebra.map_top,
+  have key0 : f.range = (intermediate_field.adjoin K (p.root_set L)).to_subalgebra,
+  { refine subalgebra.ext (λ x, ⟨_, λ h, ⟨⟨x, h⟩, rfl⟩⟩),
+    rintros ⟨y, rfl⟩,
+    exact y.prop },
+  rw key0,
+  have key : (intermediate_field.adjoin K (p.root_set L)).to_subalgebra =
+    algebra.adjoin K (p.root_set L),
+  { -- painful!
+    apply intermediate_field.adjoin_algebraic_to_subalgebra,
     intros x hx,
-    refine ⟨⟨x, intermediate_field.subset_adjoin K (p.root_set L) hx⟩, _, rfl⟩,
-    rw polynomial.mem_root_set hp0 at hx ⊢,
-    apply (algebra_map (intermediate_field.adjoin K (p.root_set L)) L).injective,
-    rw map_zero,
-    rwa is_scalar_tower.algebra_map_aeval },
+    refine ⟨p, hp0, (mem_root_set hp0).mp hx⟩ },
+  rw key,
+  rw ← algebra.adjoin_algebra_map,
+  apply algebra.adjoin_mono,
+  intros x hx,
+  refine ⟨⟨x, intermediate_field.subset_adjoin K (p.root_set L) hx⟩, _, rfl⟩,
+  rw polynomial.mem_root_set hp0 at hx ⊢,
+  apply (algebra_map (intermediate_field.adjoin K (p.root_set L)) L).injective,
+  rw map_zero,
+  rwa is_scalar_tower.algebra_map_aeval,
 end
 
 instance key_instance {x : L} [h : normal K L] : (minpoly K x).is_splitting_field K
@@ -139,10 +197,23 @@ instance intermediate_field.normal_supr
   normal K (⨆ i, t i : intermediate_field K L) :=
 begin
   refine ⟨intermediate_field.intermediate_field.is_algebraic_supr (λ i, (h i).1), λ x, _⟩,
-  obtain ⟨s, hs⟩ := key_lemma (λ i, (h i).1) x.2,
-  -- suffices to show that `minpoly K x` splits in the smaller `intermediate_field`
-  -- but the smaller `intermediate_field` is a splitting field, and hence normal
-  sorry,
+  obtain ⟨s, hx⟩ := key_lemma (λ i, (h i).1) x.2,
+  let F : intermediate_field K L := ⨆ i ∈ s,
+    intermediate_field.adjoin K ((minpoly K (i.2 : L)).root_set L),
+  change x.1 ∈ F at hx,
+  let E : intermediate_field K L := ⨆ i, t i,
+  change (minpoly K x).splits (algebra_map K E),
+  have key1 : F ≤ E,
+  { sorry },
+  have key2: ∃ p, polynomial.is_splitting_field K F p,
+  { -- prove that finite supr of splitting fields is splitting field for product
+    sorry },
+  have key3 : (minpoly K x).splits (algebra_map K F),
+  { obtain ⟨p, hp⟩ := key2,
+    have := (@normal.of_is_splitting_field K _ F _ _ p hp).splits ⟨x, hx⟩,
+    sorry },
+  exact polynomial.splits_comp_of_splits (algebra_map K F)
+    (intermediate_field.inclusion key1).to_ring_hom key3,
 end
 
 end more_technical_lemmas
