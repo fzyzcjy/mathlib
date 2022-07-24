@@ -122,12 +122,9 @@ S.to_intermediate_field $ λ x hx, begin
   { rw [hx0, inv_zero],
     exact S.zero_mem },
   letI hS' := hS.to_field,
-  suffices : ((⟨x, hx⟩ : S)⁻¹ : A) = ((⟨x, hx⟩⁻¹ : S) : A),
-  { rw [←subtype.coe_mk x hx, this],
-    apply set_like.coe_mem },
-  apply inv_eq_of_mul_eq_one_right,
-  rw [←subalgebra.coe_mul, mul_inv_cancel, subalgebra.coe_one],
-  rwa [ne, subtype.ext_iff, subtype.coe_mk],
+  obtain ⟨y, hy⟩ := hS.mul_inv_cancel (show (⟨x, hx⟩ : S) ≠ 0, from subtype.ne_of_val_ne hx0),
+  rw [subtype.ext_iff, S.coe_mul, S.coe_one, subtype.coe_mk, mul_eq_one_iff_inv_eq₀ hx0] at hy,
+  exact hy.symm ▸ y.2,
 end
 
 lemma intermediate_field.adjoin_algebraic_to_subalgebra
@@ -141,7 +138,7 @@ begin
   rw ← (intermediate_field.of_is_field this).eq_adjoin_of_eq_algebra_adjoin K S; refl,
 end
 
-lemma key_instance' {p : polynomial K} (hp : p.splits (algebra_map K L)) :
+lemma adjoin_root_set_is_splitting_field {p : polynomial K} (hp : p.splits (algebra_map K L)) :
   p.is_splitting_field K (intermediate_field.adjoin K (p.root_set L)) :=
 begin
   classical,
@@ -184,9 +181,17 @@ begin
   rwa is_scalar_tower.algebra_map_aeval,
 end
 
-instance key_instance {x : L} [h : normal K L] : (minpoly K x).is_splitting_field K
-  (intermediate_field.adjoin K ((minpoly K x).root_set L)) :=
-key_instance' (h.splits x)
+-- instance adjoin_root_set_is_splitting_field {x : L} [h : normal K L] :
+--   (minpoly K x).is_splitting_field K
+--   (intermediate_field.adjoin K ((minpoly K x).root_set L)) :=
+-- key_instance' (h.splits x)
+
+lemma intermediate_field.splitting_field_supr {ι : Type*} {t : ι → intermediate_field K L}
+  {p : ι → polynomial K} {s : finset ι} (h : ∀ i ∈ s, (p i).is_splitting_field K (t i)) :
+  (∏ i in s, p i).is_splitting_field K (⨆ i ∈ s, t i : intermediate_field K L) :=
+begin
+  sorry
+end
 
 instance intermediate_field.normal_supr
   {ι : Type*} {t : ι → intermediate_field K L} [h : Π i, normal K (t i)] :
@@ -200,15 +205,21 @@ begin
   let E : intermediate_field K L := ⨆ i, t i,
   change (minpoly K x).splits (algebra_map K E),
   have key1 : F ≤ E,
-  { sorry },
+  { refine supr_le (λ i, supr_le (λ hi, le_supr_of_le i.1 _)),
+    sorry },
   have key2: ∃ p, polynomial.is_splitting_field K F p,
   { -- prove that finite supr of splitting fields is splitting field for product
     use ∏ x in s, minpoly K (x.2 : L),
+    refine intermediate_field.splitting_field_supr (λ i hi, adjoin_root_set_is_splitting_field _),
+    have key := (h i.1).splits i.2, -- should be easy from here
     sorry },
   have key3 : (minpoly K x).splits (algebra_map K F),
   { obtain ⟨p, hp⟩ := key2,
     have := (@normal.of_is_splitting_field K _ F _ _ p hp).splits ⟨x, hx⟩,
-    sorry },
+    refine splits_of_splits_of_dvd (algebra_map K F) (minpoly.ne_zero _) this _,
+    { sorry },
+    { refine minpoly.dvd K x _,
+      sorry } },
   exact polynomial.splits_comp_of_splits (algebra_map K F)
     (intermediate_field.inclusion key1).to_ring_hom key3,
 end
