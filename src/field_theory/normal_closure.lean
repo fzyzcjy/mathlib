@@ -137,17 +137,20 @@ lemma is_algebraic_of_mem_root_set {p : polynomial K} {x : L} (hx : x ∈ p.root
   is_algebraic K x :=
 ⟨p, ne_zero_of_mem_root_set hx, (mem_root_set (ne_zero_of_mem_root_set hx)).mp hx⟩
 
-lemma map_root_set_of_splits {F K : Type*} [field F] [field K] [algebra F K] {p : polynomial F}
+lemma root_set_map {F K : Type*} [field F] [field K] [algebra F K] {p : polynomial F}
   (h : p.splits (algebra_map F K)) (L : Type*) [field L] [algebra F L] [algebra K L]
   [is_scalar_tower F K L] : algebra_map K L '' p.root_set K = p.root_set L :=
 begin
-  sorry
+  classical,
+  rw [root_set, ←finset.coe_image, ←multiset.to_finset_map, ←roots_map (algebra_map K L)
+      ((splits_id_iff_splits (algebra_map F K)).mpr h), map_map,
+      ←is_scalar_tower.algebra_map_eq, ←root_set],
 end
 
 lemma map_root_set_of_splits' {F K : Type*} [field F] [field K] [algebra F K] {p : polynomial F}
   (h : p.splits (algebra_map F K)) (L : Type*) [field L] [algebra F L] [algebra K L]
   [is_scalar_tower F K L] : is_scalar_tower.to_alg_hom F K L '' p.root_set K = p.root_set L :=
-map_root_set_of_splits h L
+root_set_map h L
 
 lemma alg_hom.map_injective {R A B : Type*} [comm_semiring R] [semiring A] [semiring B]
   [algebra R A] [algebra R B] (f : A →ₐ[R] B) (hf : function.injective f) :
@@ -177,48 +180,8 @@ end
 
 lemma adjoin_root_set_is_splitting_field {p : polynomial K} (hp : p.splits (algebra_map K L)) :
   p.is_splitting_field K (intermediate_field.adjoin K (p.root_set L)) :=
-begin
-  refine intermediate_field.is_splitting_field_iff.mpr ⟨intermediate_field.splits_of_splits hp
-    (λ x hx, intermediate_field.subset_adjoin K (p.root_set L) hx), rfl⟩,
-  /-classical,
-  by_cases hp0 : p = 0,
-  { rw [hp0, polynomial.root_set_zero, intermediate_field.adjoin_empty],
-    haveI : subsingleton (subalgebra K (⊥ : intermediate_field K L)) :=
-    subsingleton_of_bot_eq_top (subalgebra.bot_eq_top_of_dim_eq_one (intermediate_field.dim_bot)),
-    exact ⟨polynomial.splits_zero _, subsingleton.elim _ _⟩ },
-  refine ⟨intermediate_field.splits_of_splits hp (intermediate_field.subset_adjoin K (p.root_set L)), _⟩,
-  rw [←polynomial.root_set, eq_top_iff],
-  let f := is_scalar_tower.to_alg_hom K (intermediate_field.adjoin K (p.root_set L)) L,
-  let g := λ S, subalgebra.map S f,
-  have h0 : ∀ S T : subalgebra K (intermediate_field.adjoin K (p.root_set L)), S.map f ≤ T.map f → S ≤ T,
-  { -- should be a lemma
-    intros S T h x hx,
-    have key : ↑x ∈ S.map f := ⟨x, hx, rfl⟩,
-    obtain ⟨y, hy, heq⟩ := h key,
-    rwa ← (algebra_map (intermediate_field.adjoin K (p.root_set L)) L).injective heq },
-  refine h0 _ _ _,
-  rw algebra.map_top,
-  have key0 : f.range = (intermediate_field.adjoin K (p.root_set L)).to_subalgebra,
-  { refine subalgebra.ext (λ x, ⟨_, λ h, ⟨⟨x, h⟩, rfl⟩⟩),
-    rintros ⟨y, rfl⟩,
-    exact y.prop },
-  rw key0,
-  have key : (intermediate_field.adjoin K (p.root_set L)).to_subalgebra =
-    algebra.adjoin K (p.root_set L),
-  { -- painful!
-    apply intermediate_field.adjoin_algebraic_to_subalgebra,
-    intros x hx,
-    refine ⟨p, hp0, (mem_root_set hp0).mp hx⟩ },
-  rw key,
-  rw ← algebra.adjoin_algebra_map,
-  apply algebra.adjoin_mono,
-  intros x hx,
-  refine ⟨⟨x, intermediate_field.subset_adjoin K (p.root_set L) hx⟩, _, rfl⟩,
-  rw polynomial.mem_root_set hp0 at hx ⊢,
-  apply (algebra_map (intermediate_field.adjoin K (p.root_set L)) L).injective,
-  rw map_zero,
-  rwa is_scalar_tower.algebra_map_aeval,-/
-end
+intermediate_field.is_splitting_field_iff.mpr ⟨intermediate_field.splits_of_splits hp
+  (λ x hx, intermediate_field.subset_adjoin K (p.root_set L) hx), rfl⟩
 
 -- instance adjoin_root_set_is_splitting_field {x : L} [h : normal K L] :
 --   (minpoly K x).is_splitting_field K
