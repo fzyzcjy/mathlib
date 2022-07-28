@@ -12,8 +12,8 @@ def alg_hom.field_range : intermediate_field F L :=
 { .. f.range,
   .. f.to_ring_hom.field_range }
 
-lemma field_range_eq_map_top : f.field_range = (⊤ : intermediate_field F L').map f :=
-sorry
+lemma intermediate_field.map_top : f.field_range = (⊤ : intermediate_field F L').map f :=
+intermediate_field.ext (λ x, ⟨λ ⟨y, h⟩, ⟨y, trivial, h⟩, λ ⟨y, _, h⟩, ⟨y, h⟩⟩)
 
 noncomputable def alg_hom.equiv_field_range (f : L' →ₐ[F] L) : L' ≃ₐ[F] f.field_range :=
 alg_equiv.of_injective f f.to_ring_hom.injective
@@ -43,24 +43,14 @@ namespace intermediate_field
 
 variables {F E : Type*} [field F] [field E] [algebra F E]
 
-lemma is_algebraic_algebra_map_iff {R A B : Type*} [comm_ring R] [comm_ring A]
-  [ring B] [algebra R A] [algebra A B] [algebra R B] [is_scalar_tower R A B] {x : A}
-  (hx : function.injective (algebra_map A B)) :
-  is_algebraic R (algebra_map A B x) ↔ is_algebraic R x :=
-⟨λ ⟨p, hp0, hp⟩, ⟨p, hp0, hx (by rwa [map_zero, ←is_scalar_tower.to_alg_hom_apply R A B,
-  ←polynomial.aeval_alg_hom_apply, is_scalar_tower.to_alg_hom_apply R A B])⟩,
-  is_algebraic_algebra_map_of_is_algebraic⟩
-
-lemma algebraic_iff {K : intermediate_field F E} {x : K} :
-  is_algebraic F x ↔ is_algebraic F (x : E) :=
-(is_algebraic_algebra_map_iff (algebra_map K E).injective).symm
-
+-- PRed
 lemma key_alg_lemma {ι : Type*} {f : ι → intermediate_field F E} {x : E} (hx : x ∈ ⨆ i, f i) :
   ∃ s : finset (Σ i, f i), x ∈ ⨆ i ∈ s, F⟮(i.2 : E)⟯ :=
 intermediate_field.exists_finset_of_mem_supr
   (set_like.le_def.mp (supr_le (λ i x h, set_like.le_def.mp (le_supr_of_le ⟨i, x, h⟩ le_rfl)
     (intermediate_field.mem_adjoin_simple_self F x))) hx)
 
+-- PRed
 lemma intermediate_field.is_algebraic_supr
   {ι : Type*} {t : ι → intermediate_field F E} (h : ∀ i, algebra.is_algebraic F (t i)) :
   algebra.is_algebraic F (⨆ i, t i : intermediate_field F E) :=
@@ -100,6 +90,7 @@ open_locale big_operators
 
 open polynomial
 
+-- PRed
 lemma intermediate_field.splits_of_splits {p : polynomial K} {F : intermediate_field K L}
   (hp : p.splits (algebra_map K L)) (hF : ∀ x ∈ p.root_set L, x ∈ F) :
   p.splits (algebra_map K F) :=
@@ -115,6 +106,7 @@ begin
   refl,
 end
 
+-- PRed
 def intermediate_field.of_is_field {R A : Type*} [field R] [field A] [algebra R A]
   {S : subalgebra R A} (hS : is_field S) : intermediate_field R A :=
 S.to_intermediate_field $ λ x hx, begin
@@ -128,7 +120,7 @@ S.to_intermediate_field $ λ x hx, begin
 end
 
 lemma intermediate_field.adjoin_algebraic_to_subalgebra
-  (S : set L) (hS : ∀ x ∈ S, is_algebraic K x) :
+  {S : set L} (hS : ∀ x ∈ S, is_algebraic K x) :
   (intermediate_field.adjoin K S).to_subalgebra = algebra.adjoin K S :=
 begin
   simp only [is_algebraic_iff_is_integral] at hS,
@@ -138,10 +130,57 @@ begin
   rw ← (intermediate_field.of_is_field this).eq_adjoin_of_eq_algebra_adjoin K S; refl,
 end
 
+lemma ne_zero_of_mem_root_set {p : polynomial K} {x : L} (hx : x ∈ p.root_set L) : p ≠ 0 :=
+λ hp, by rwa [hp, root_set_zero] at hx
+
+lemma is_algebraic_of_mem_root_set {p : polynomial K} {x : L} (hx : x ∈ p.root_set L) :
+  is_algebraic K x :=
+⟨p, ne_zero_of_mem_root_set hx, (mem_root_set (ne_zero_of_mem_root_set hx)).mp hx⟩
+
+lemma map_root_set_of_splits {F K : Type*} [field F] [field K] [algebra F K] {p : polynomial F}
+  (h : p.splits (algebra_map F K)) (L : Type*) [field L] [algebra F L] [algebra K L]
+  [is_scalar_tower F K L] : algebra_map K L '' p.root_set K = p.root_set L :=
+begin
+  sorry
+end
+
+lemma map_root_set_of_splits' {F K : Type*} [field F] [field K] [algebra F K] {p : polynomial F}
+  (h : p.splits (algebra_map F K)) (L : Type*) [field L] [algebra F L] [algebra K L]
+  [is_scalar_tower F K L] : is_scalar_tower.to_alg_hom F K L '' p.root_set K = p.root_set L :=
+map_root_set_of_splits h L
+
+lemma alg_hom.map_injective {R A B : Type*} [comm_semiring R] [semiring A] [semiring B]
+  [algebra R A] [algebra R B] (f : A →ₐ[R] B) (hf : function.injective f) :
+  function.injective (λ S, subalgebra.map S f) :=
+λ S T h, set_like.ext (λ x, by simpa only [subalgebra.mem_map, exists_prop,
+  hf.eq_iff, exists_eq_right] using set_like.ext_iff.mp h (f x))
+
+lemma intermediate_field.is_splitting_field_iff {p : polynomial K} {F : intermediate_field K L} :
+  p.is_splitting_field K F ↔
+    p.splits (algebra_map K F) ∧ F = intermediate_field.adjoin K (p.root_set L) :=
+begin
+  suffices : p.splits (algebra_map K F) →
+    ((algebra.adjoin K (p.root_set F) = ⊤ ↔ F = intermediate_field.adjoin K (p.root_set L))),
+  { exact ⟨λ h, ⟨h.1, (this h.1).mp h.2⟩, λ h, ⟨h.1, (this h.1).mpr h.2⟩⟩ },
+  intro hp,
+  simp_rw [set_like.ext_iff, ←intermediate_field.mem_to_subalgebra, ←set_like.ext_iff],
+  have key2 : (intermediate_field.adjoin K (p.root_set L)).to_subalgebra =
+    algebra.adjoin K (p.root_set L) :=
+  intermediate_field.adjoin_algebraic_to_subalgebra (λ x, is_algebraic_of_mem_root_set),
+  rw [intermediate_field.adjoin_algebraic_to_subalgebra (λ x, is_algebraic_of_mem_root_set),
+      ←map_root_set_of_splits' hp L, algebra.adjoin_image],
+  rw [←(alg_hom.map_injective (is_scalar_tower.to_alg_hom K F L) (algebra_map F L).injective).eq_iff],
+  simp only,
+  rw [algebra.map_top, eq_comm, ←F.range_val],
+  refl,
+end
+
 lemma adjoin_root_set_is_splitting_field {p : polynomial K} (hp : p.splits (algebra_map K L)) :
   p.is_splitting_field K (intermediate_field.adjoin K (p.root_set L)) :=
 begin
-  classical,
+  refine intermediate_field.is_splitting_field_iff.mpr ⟨intermediate_field.splits_of_splits hp
+    (λ x hx, intermediate_field.subset_adjoin K (p.root_set L) hx), rfl⟩,
+  /-classical,
   by_cases hp0 : p = 0,
   { rw [hp0, polynomial.root_set_zero, intermediate_field.adjoin_empty],
     haveI : subsingleton (subalgebra K (⊥ : intermediate_field K L)) :=
@@ -178,7 +217,7 @@ begin
   rw polynomial.mem_root_set hp0 at hx ⊢,
   apply (algebra_map (intermediate_field.adjoin K (p.root_set L)) L).injective,
   rw map_zero,
-  rwa is_scalar_tower.algebra_map_aeval,
+  rwa is_scalar_tower.algebra_map_aeval,-/
 end
 
 -- instance adjoin_root_set_is_splitting_field {x : L} [h : normal K L] :
@@ -190,6 +229,7 @@ lemma intermediate_field.splitting_field_supr {ι : Type*} {t : ι → intermedi
   {p : ι → polynomial K} {s : finset ι} (h : ∀ i ∈ s, (p i).is_splitting_field K (t i)) :
   (∏ i in s, p i).is_splitting_field K (⨆ i ∈ s, t i : intermediate_field K L) :=
 begin
+  refine ⟨_, _⟩,
   sorry
 end
 
