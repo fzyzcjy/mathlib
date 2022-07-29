@@ -33,42 +33,6 @@ lemma intermediate_field.comap_mono (h : S ≤ T) : S.comap f ≤ T.comap f :=
 
 end intermediate_field_constructions
 
-section technical_lemmas
-
-variables {K L : Type*} [field K] [field L] [algebra K L]
-
-end technical_lemmas
-
-namespace intermediate_field
-
-variables {F E : Type*} [field F] [field E] [algebra F E]
-
--- PRed
-lemma key_alg_lemma {ι : Type*} {f : ι → intermediate_field F E} {x : E} (hx : x ∈ ⨆ i, f i) :
-  ∃ s : finset (Σ i, f i), x ∈ ⨆ i ∈ s, F⟮(i.2 : E)⟯ :=
-intermediate_field.exists_finset_of_mem_supr
-  (set_like.le_def.mp (supr_le (λ i x h, set_like.le_def.mp (le_supr_of_le ⟨i, x, h⟩ le_rfl)
-    (intermediate_field.mem_adjoin_simple_self F x))) hx)
-
--- PRed
-lemma intermediate_field.is_algebraic_supr
-  {ι : Type*} {t : ι → intermediate_field F E} (h : ∀ i, algebra.is_algebraic F (t i)) :
-  algebra.is_algebraic F (⨆ i, t i : intermediate_field F E) :=
-begin
-  rintros ⟨x, hx⟩,
-  obtain ⟨s, hs⟩ := key_alg_lemma hx,
-  haveI : ∀ i : (Σ i, t i), finite_dimensional F F⟮(i.2 : E)⟯,
-  { rintros ⟨i, x⟩,
-    specialize h i x,
-    rw [intermediate_field.algebraic_iff, is_algebraic_iff_is_integral] at h,
-    exact intermediate_field.adjoin.finite_dimensional h },
-  have := algebra.is_algebraic_of_finite F
-    (⨆ i ∈ s, F⟮(i.2 : E)⟯ : intermediate_field F E) ⟨x, hs⟩,
-  rwa [intermediate_field.algebraic_iff, subtype.coe_mk] at this ⊢,
-end
-
-end intermediate_field
-
 section more_technical_lemmas
 
 variables {K L : Type*} [field K] [field L] [algebra K L]
@@ -107,18 +71,6 @@ begin
 end
 
 -- PRed
-def intermediate_field.of_is_field {R A : Type*} [field R] [field A] [algebra R A]
-  {S : subalgebra R A} (hS : is_field S) : intermediate_field R A :=
-S.to_intermediate_field $ λ x hx, begin
-  by_cases hx0 : x = 0,
-  { rw [hx0, inv_zero],
-    exact S.zero_mem },
-  letI hS' := hS.to_field,
-  obtain ⟨y, hy⟩ := hS.mul_inv_cancel (show (⟨x, hx⟩ : S) ≠ 0, from subtype.ne_of_val_ne hx0),
-  rw [subtype.ext_iff, S.coe_mul, S.coe_one, subtype.coe_mk, mul_eq_one_iff_inv_eq₀ hx0] at hy,
-  exact hy.symm ▸ y.2,
-end
-
 lemma intermediate_field.adjoin_algebraic_to_subalgebra
   {S : set L} (hS : ∀ x ∈ S, is_algebraic K x) :
   (intermediate_field.adjoin K S).to_subalgebra = algebra.adjoin K S :=
@@ -127,16 +79,19 @@ begin
   have : algebra.is_integral K (algebra.adjoin K S) :=
   by rwa [←le_integral_closure_iff_is_integral, algebra.adjoin_le_iff],
   have := is_field_of_is_integral_of_is_field' this (field.to_is_field K),
-  rw ← (intermediate_field.of_is_field this).eq_adjoin_of_eq_algebra_adjoin K S; refl,
+  rw ← ((algebra.adjoin K S).to_intermediate_field' this).eq_adjoin_of_eq_algebra_adjoin K S; refl,
 end
 
+-- PRed
 lemma ne_zero_of_mem_root_set {p : polynomial K} {x : L} (hx : x ∈ p.root_set L) : p ≠ 0 :=
 λ hp, by rwa [hp, root_set_zero] at hx
 
+-- PRed
 lemma is_algebraic_of_mem_root_set {p : polynomial K} {x : L} (hx : x ∈ p.root_set L) :
   is_algebraic K x :=
 ⟨p, ne_zero_of_mem_root_set hx, (mem_root_set (ne_zero_of_mem_root_set hx)).mp hx⟩
 
+-- PRed
 lemma map_root_set {F K L : Type*} [field F] [field K] [field L] [algebra F K] [algebra F L]
   {p : polynomial F} (h : p.splits (algebra_map F K)) (f : K →ₐ[F] L) :
   f '' p.root_set K = p.root_set L :=
@@ -146,11 +101,13 @@ begin
       ((splits_id_iff_splits (algebra_map F K)).mpr h), map_map, f.comp_algebra_map, ←root_set],
 end
 
+-- PRed
 lemma map_root_set' {F K : Type*} [field F] [field K] [algebra F K] {p : polynomial F}
   (h : p.splits (algebra_map F K)) (L : Type*) [field L] [algebra F L] [algebra K L]
   [is_scalar_tower F K L] : algebra_map K L '' p.root_set K = p.root_set L :=
 map_root_set h (is_scalar_tower.to_alg_hom F K L)
 
+-- PRed
 lemma alg_hom.map_injective {R A B : Type*} [comm_semiring R] [semiring A] [semiring B]
   [algebra R A] [algebra R B] (f : A →ₐ[R] B) (hf : function.injective f) :
   function.injective (λ S, subalgebra.map S f) :=
@@ -200,7 +157,7 @@ instance intermediate_field.normal_supr
   {ι : Type*} {t : ι → intermediate_field K L} [h : Π i, normal K (t i)] :
   normal K (⨆ i, t i : intermediate_field K L) :=
 begin
-  refine ⟨intermediate_field.intermediate_field.is_algebraic_supr (λ i, (h i).1), λ x, _⟩,
+  refine ⟨intermediate_field.is_algebraic_supr (λ i, (h i).1), λ x, _⟩,
   obtain ⟨s, hx⟩ := key_lemma (λ i, (h i).1) x.2,
   let F : intermediate_field K L := ⨆ i ∈ s,
     intermediate_field.adjoin K ((minpoly K (i.2 : L)).root_set L),
