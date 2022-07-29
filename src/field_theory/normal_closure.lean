@@ -154,8 +154,7 @@ map_root_set h (is_scalar_tower.to_alg_hom F K L)
 lemma alg_hom.map_injective {R A B : Type*} [comm_semiring R] [semiring A] [semiring B]
   [algebra R A] [algebra R B] (f : A →ₐ[R] B) (hf : function.injective f) :
   function.injective (λ S, subalgebra.map S f) :=
-λ S T h, set_like.ext (λ x, by simpa only [subalgebra.mem_map, exists_prop,
-  hf.eq_iff, exists_eq_right] using set_like.ext_iff.mp h (f x))
+λ _ _, subalgebra.map_injective f hf
 
 lemma intermediate_field.is_splitting_field_iff {p : polynomial K} {F : intermediate_field K L} :
   p.is_splitting_field K F ↔
