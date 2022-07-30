@@ -107,12 +107,6 @@ lemma map_root_set' {F K : Type*} [field F] [field K] [algebra F K] {p : polynom
   [is_scalar_tower F K L] : algebra_map K L '' p.root_set K = p.root_set L :=
 map_root_set h (is_scalar_tower.to_alg_hom F K L)
 
--- PRed
-lemma alg_hom.map_injective {R A B : Type*} [comm_semiring R] [semiring A] [semiring B]
-  [algebra R A] [algebra R B] (f : A →ₐ[R] B) (hf : function.injective f) :
-  function.injective (λ S, subalgebra.map S f) :=
-λ _ _, subalgebra.map_injective f hf
-
 lemma intermediate_field.is_splitting_field_iff {p : polynomial K} {F : intermediate_field K L} :
   p.is_splitting_field K F ↔
     p.splits (algebra_map K F) ∧ F = intermediate_field.adjoin K (p.root_set L) :=
@@ -127,8 +121,8 @@ begin
   intermediate_field.adjoin_algebraic_to_subalgebra (λ x, is_algebraic_of_mem_root_set),
   rw [intermediate_field.adjoin_algebraic_to_subalgebra (λ x, is_algebraic_of_mem_root_set),
       ←map_root_set hp F.val, algebra.adjoin_image],
-  rw [←(F.val.map_injective (algebra_map F L).injective).eq_iff],
-  simp only,
+  rw [←(subalgebra.map_injective (show function.injective F.val,
+    from (algebra_map F L).injective)).eq_iff],
   rw [algebra.map_top, eq_comm, F.range_val],
 end
 
