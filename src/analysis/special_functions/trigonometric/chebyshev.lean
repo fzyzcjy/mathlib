@@ -4,8 +4,9 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Johan Commelin
 -/
 import analysis.complex.basic
-import ring_theory.polynomial.chebyshev
 import data.complex.exponential
+import data.polynomial.algebra_map
+import ring_theory.polynomial.chebyshev
 
 /-!
 # Multiple angle formulas in terms of Chebyshev polynomials
@@ -32,6 +33,11 @@ begin
   { rw ← sin_sq_add_cos_sq θ, ring, },
   simp only [nat.cast_add, nat.cast_one, add_mul, cos_add, one_mul, sin_add, mul_assoc, aux],
   ring,
+end
+
+lemma T_complex_cos' (θ : ℂ) (n : ℕ) : aeval (cos θ) (T ℤ n) = cos (n * θ) :=
+begin
+  rw aeval_eq_eval_map,
 end
 
 /-- `cos (n * θ)` is equal to the `n`-th Chebyshev polynomial of the first kind evaluated
