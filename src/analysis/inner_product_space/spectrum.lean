@@ -132,14 +132,17 @@ show (⨆ μ : {μ // (eigenspace T μ) ≠ ⊥}, eigenspace T μ)ᗮ = ⊥,
 by rw [supr_ne_bot_subtype, hT.orthogonal_supr_eigenspaces_eq_bot]
 
 include dec_𝕜
-
-noncomputable instance direct_sum_decomposition :
+omit hT
+/-- The eigenspaces of a self-adjoint operator on a finite-dimensional inner product space `E` give
+an internal direct sum decomposition of `E`. -/
+noncomputable instance direct_sum_decomposition [hT : fact (is_self_adjoint T)] :
   direct_sum.decomposition (λ μ : eigenvalues T, eigenspace T μ) :=
 begin
   haveI h : ∀ μ : eigenvalues T, complete_space (eigenspace T μ) := λ μ, by apply_instance,
-  exact hT.orthogonal_family_eigenspaces'.decomposition
-    (submodule.orthogonal_eq_bot_iff.mp hT.orthogonal_supr_eigenspaces_eq_bot'),
+  exact hT.out.orthogonal_family_eigenspaces'.decomposition
+    (submodule.orthogonal_eq_bot_iff.mp hT.out.orthogonal_supr_eigenspaces_eq_bot'),
 end
+include hT
 
 /-- The eigenspaces of a self-adjoint operator on a finite-dimensional inner product space `E` give
 an internal direct sum decomposition of `E`. -/
