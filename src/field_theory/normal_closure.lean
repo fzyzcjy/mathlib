@@ -54,43 +54,9 @@ open_locale big_operators
 
 open polynomial
 
-lemma intermediate_field.root_set_subset_of_splits {p : polynomial K} {F : intermediate_field K L}
-  (hp : p.splits (algebra_map K F)) : p.root_set L ⊆ F :=
-begin
-  rw ← image_root_set hp F.val,
-  rintros - ⟨a, -, rfl⟩,
-  exact a.2,
-end
-
--- PRed
-lemma intermediate_field.adjoin_algebraic_to_subalgebra
-  {S : set L} (hS : ∀ x ∈ S, is_algebraic K x) :
-  (intermediate_field.adjoin K S).to_subalgebra = algebra.adjoin K S :=
-begin
-  simp only [is_algebraic_iff_is_integral] at hS,
-  have : algebra.is_integral K (algebra.adjoin K S) :=
-  by rwa [←le_integral_closure_iff_is_integral, algebra.adjoin_le_iff],
-  have := is_field_of_is_integral_of_is_field' this (field.to_is_field K),
-  rw ← ((algebra.adjoin K S).to_intermediate_field' this).eq_adjoin_of_eq_algebra_adjoin K S; refl,
-end
-
--- PRed
-lemma ne_zero_of_mem_root_set {p : polynomial K} {x : L} (hx : x ∈ p.root_set L) : p ≠ 0 :=
-λ hp, by rwa [hp, root_set_zero] at hx
-
--- PRed
-lemma is_algebraic_of_mem_root_set {p : polynomial K} {x : L} (hx : x ∈ p.root_set L) :
-  is_algebraic K x :=
-⟨p, ne_zero_of_mem_root_set hx, (mem_root_set (ne_zero_of_mem_root_set hx)).mp hx⟩
-
--- PRed
--- lemma image_root_set' {F K : Type*} [field F] [field K] [algebra F K] {p : polynomial F}
---   (h : p.splits (algebra_map F K)) (L : Type*) [field L] [algebra F L] [algebra K L]
---   [is_scalar_tower F K L] : algebra_map K L '' p.root_set K = p.root_set L :=
--- image_root_set h (is_scalar_tower.to_alg_hom F K L)
-
 namespace intermediate_field
 
+-- PRed
 lemma is_splitting_field_iff {p : polynomial K} {F : intermediate_field K L} :
   p.is_splitting_field K F ↔ p.splits (algebra_map K F) ∧ F = adjoin K (p.root_set L) :=
 begin
@@ -106,6 +72,7 @@ end
 
 end intermediate_field
 
+-- PRed
 lemma adjoin_root_set_is_splitting_field {p : polynomial K} (hp : p.splits (algebra_map K L)) :
   p.is_splitting_field K (intermediate_field.adjoin K (p.root_set L)) :=
 intermediate_field.is_splitting_field_iff.mpr ⟨intermediate_field.splits_of_splits hp
@@ -126,6 +93,7 @@ begin
     sorry },
 end
 
+-- PRed
 lemma intermediate_field.minpoly_eq {F : intermediate_field K L} (x : F) :
   minpoly K x = minpoly K (x : L) :=
 begin
@@ -160,7 +128,6 @@ begin
   { refine supr_le (λ i, supr_le (λ hi, le_supr_of_le i.1 _)),
     rw intermediate_field.adjoin_le_iff,
     rw ← intermediate_field.minpoly_eq,
-    -- could be lemma
     rw ← image_root_set ((h i.1).splits i.2) (t i.1).val,
     rintros - ⟨a, -, rfl⟩,
     exact a.2 },
