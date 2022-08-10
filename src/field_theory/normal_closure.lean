@@ -54,32 +54,6 @@ open_locale big_operators
 
 open polynomial
 
--- PRed
-lemma intermediate_field.splits_of_splits {p : polynomial K} {F : intermediate_field K L}
-  (hp : p.splits (algebra_map K L)) (hF : ∀ x ∈ p.root_set L, x ∈ F) :
-  p.splits (algebra_map K F) :=
-begin
-  classical,
-  simp_rw [root_set, finset.mem_coe, multiset.mem_to_finset] at hF,
-  refine (splits_iff_exists_multiset (algebra_map K F)).mpr ⟨(p.map (algebra_map K L)).roots.map
-    (λ x, if hx : x ∈ F then (⟨x, hx⟩ : F) else 0), map_injective _ (algebra_map F L).injective _⟩,
-  simp_rw [polynomial.map_mul, polynomial.map_multiset_prod, multiset.map_map, map_C, map_map],
-  refine (eq_prod_roots_of_splits hp).trans (congr_arg ((*) (C _))
-    (congr_arg multiset.prod (multiset.map_congr rfl (λ x hx, _)))),
-  rw [function.comp_app, function.comp_app, dif_pos (hF x hx), polynomial.map_sub, map_X, map_C],
-  refl,
-end
-
--- PRed
-lemma image_root_set {F K L : Type*} [field F] [field K] [field L] [algebra F K] [algebra F L]
-  {p : polynomial F} (h : p.splits (algebra_map F K)) (f : K →ₐ[F] L) :
-  f '' p.root_set K = p.root_set L :=
-begin
-  classical,
-  rw [root_set, ←finset.coe_image, ←multiset.to_finset_map, ←f.coe_to_ring_hom, ←roots_map ↑f
-      ((splits_id_iff_splits (algebra_map F K)).mpr h), map_map, f.comp_algebra_map, ←root_set],
-end
-
 lemma intermediate_field.root_set_subset_of_splits {p : polynomial K} {F : intermediate_field K L}
   (hp : p.splits (algebra_map K F)) : p.root_set L ⊆ F :=
 begin
