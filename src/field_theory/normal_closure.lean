@@ -47,7 +47,7 @@ begin
   refine set_like.le_def.mp (le_supr_of_le ⟨i, x, hx⟩ le_rfl) _,
   refine intermediate_field.subset_adjoin K ((minpoly K x).root_set L) _,
   refine (polynomial.mem_root_set_iff (minpoly.ne_zero _) x).mpr (minpoly.aeval K x),
-  exact is_algebraic_iff_is_integral.mp (intermediate_field.algebraic_iff.mp (h i ⟨x, hx⟩)),
+  exact is_algebraic_iff_is_integral.mp (intermediate_field.is_algebraic_iff.mp (h i ⟨x, hx⟩)),
 end
 
 open_locale big_operators
@@ -107,17 +107,6 @@ begin
     refine supr_congr (λ i, supr_congr (and.right ∘ h i)) },
 end
 
--- merged
-lemma intermediate_field.minpoly_eq {F : intermediate_field K L} (x : F) :
-  minpoly K x = minpoly K (x : L) :=
-begin
-  by_cases hx : is_integral K x,
-  { exact minpoly.eq_of_algebra_map_eq (algebra_map F L).injective hx rfl },
-  { rw [minpoly.eq_zero hx, minpoly.eq_zero],
-    rwa [←is_algebraic_iff_is_integral, ←intermediate_field.algebraic_iff,
-      is_algebraic_iff_is_integral] },
-end
-
 instance intermediate_field.normal_supr
   {ι : Type*} {t : ι → intermediate_field K L} [h : ∀ i, normal K (t i)] :
   normal K (⨆ i, t i : intermediate_field K L) :=
@@ -164,10 +153,25 @@ namespace normal_closure
 
 instance is_normal [h : normal F L] : normal F (normal_closure F K L) :=
 begin
-  change normal F (⨆ f : K →ₐ[F] L, f.field_range : intermediate_field F L),
-  -- rewrite as a supremum of normal intermediate fields
-  -- apply intermediate_field.normal_supr,
-  all_goals { sorry },
+  let N₁ : intermediate_field F L := ⨆ f : K →ₐ[F] L, f.field_range,
+  let N₂ : intermediate_field F L :=
+  ⨆ x : K, intermediate_field.adjoin F ((minpoly F x).root_set L),
+  change normal F N₁,
+  have key : normal F N₂,
+  { haveI : ∀ x : K, normal F (intermediate_field.adjoin F ((minpoly F x).root_set L)),
+    { intro x,
+      apply normal.of_is_splitting_field (minpoly F x),
+      apply adjoin_root_set_is_splitting_field,
+      sorry },
+    apply intermediate_field.normal_supr },
+  suffices : N₁ = N₂,
+  { rwa this },
+  apply le_antisymm; refine supr_le _,
+  { rintros f _ ⟨x, rfl⟩,
+    sorry },
+  { intro x,
+    rw intermediate_field.adjoin_le_iff,
+    sorry },
 end
 
 instance is_finite_dimensional [finite_dimensional F K] :
@@ -199,41 +203,3 @@ lemma rel_normal_closure_idem :
 sorry
 
 end intermediate_field
-
-section fancy_way
-
-theorem thm1 {F K L : Type*} [field F] [field K] [field L] [algebra F K] [algebra F L] [normal F K]
-  (f g : K →ₐ[F] L) : f.field_range = g.field_range :=
-begin
-  sorry
-end
-
-theorem thm2 (F K L : Type*) [field F] [field K] [field L] [algebra F K] [algebra F L]
-  [is_alg_closed L] (h : ∀ f g : K →ₐ[F] L, f.field_range ≤ g.field_range) : normal F K :=
-begin
-  sorry
-end
-
-lemma alg_hom.map_supr {F K L : Type*} [field F] [field K] [field L] [algebra F K]
-  [algebra F L] {ι : Type*} (t : ι → intermediate_field F K) (f : K →ₐ[F] L) :
-  (⨆ i, t i).map f = ⨆ i, (t i).map f :=
-sorry
-
-instance intermediate_field.normal_supr'
-  {K L : Type*} [field K] [field L] [algebra K L]
-  {ι : Type*} {t : ι → intermediate_field K L} [Π i, normal K (t i)] :
-  normal K (⨆ i, t i : intermediate_field K L) :=
-begin
-  refine thm2 K (⨆ i, t i : intermediate_field K L) (algebraic_closure K) (λ f g, _),
-  let u : ι → intermediate_field K (⨆ i, t i : intermediate_field K L) :=
-  λ i, sorry,
-  have key1 : (⊤ : intermediate_field K (⨆ i, t i : intermediate_field K L)) = ⨆ i, u i :=
-  sorry,
-  have key2 : ∀ i, (u i).map f = (u i).map g := sorry,
-  rw [field_range_eq_map_top, key1, alg_hom.map_supr, supr_le_iff],
-  intros i,
-  rw key2,
-  have key := alg_hom.lift_normal,
-end
-
-end fancy_way
