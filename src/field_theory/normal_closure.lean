@@ -108,7 +108,7 @@ begin
 end
 
 instance intermediate_field.normal_supr
-  {ι : Type*} {t : ι → intermediate_field K L} [h : ∀ i, normal K (t i)] :
+  {ι : Type*} (t : ι → intermediate_field K L) [h : ∀ i, normal K (t i)] :
   normal K (⨆ i, t i : intermediate_field K L) :=
 begin
   refine ⟨intermediate_field.is_algebraic_supr (λ i, (h i).1), λ x, _⟩,
@@ -151,27 +151,48 @@ example : is_scalar_tower F K (normal_closure F K L) := by apply_instance
 
 namespace normal_closure
 
-instance is_normal [h : normal F L] : normal F (normal_closure F K L) :=
+lemma restrict_scalars_eq_supr_adjoin [h : normal F L] :
+  (normal_closure F K L).restrict_scalars F =
+  ⨆ x : K, intermediate_field.adjoin F ((minpoly F x).root_set L) :=
 begin
-  let N₁ : intermediate_field F L := ⨆ f : K →ₐ[F] L, f.field_range,
-  let N₂ : intermediate_field F L :=
-  ⨆ x : K, intermediate_field.adjoin F ((minpoly F x).root_set L),
-  change normal F N₁,
-  have key : normal F N₂,
-  { haveI : ∀ x : K, normal F (intermediate_field.adjoin F ((minpoly F x).root_set L)),
-    { intro x,
-      apply normal.of_is_splitting_field (minpoly F x),
-      apply adjoin_root_set_is_splitting_field,
-      sorry },
-    apply intermediate_field.normal_supr },
-  suffices : N₁ = N₂,
-  { rwa this },
-  apply le_antisymm; refine supr_le _,
+  refine le_antisymm (supr_le _) (supr_le (λ x, _)),
   { rintros f _ ⟨x, rfl⟩,
-    sorry },
-  { intro x,
+    refine le_supr (λ x, intermediate_field.adjoin F ((minpoly F x).root_set L)) x
+      (intermediate_field.subset_adjoin F ((minpoly F x).root_set L) _),
+    rw [polynomial.mem_root_set, alg_hom.to_ring_hom_eq_coe, alg_hom.coe_to_ring_hom,
+        polynomial.aeval_alg_hom_apply, minpoly.aeval, map_zero],
+    exact minpoly.ne_zero ((is_integral_algebra_map_iff (algebra_map K L).injective).mp
+      (h.is_integral (algebra_map K L x))) },
+  { have hx := (is_integral_algebra_map_iff
+      (algebra_map K L).injective).mp (h.is_integral (algebra_map K L x)),
     rw intermediate_field.adjoin_le_iff,
-    sorry },
+    intros y hy,
+    rw [polynomial.root_set, finset.mem_coe, multiset.mem_to_finset] at hy,
+    let g := (intermediate_field.alg_hom_adjoin_integral_equiv F hx).symm ⟨y, hy⟩,
+    have hg : g (intermediate_field.adjoin_simple.gen F x) = y :=
+    begin
+      simp only [g, intermediate_field.alg_hom_adjoin_integral_equiv, equiv.symm_trans_apply,
+        power_basis.lift_equiv', power_basis.lift_equiv_symm_apply],
+      simp only [equiv.subtype_equiv_symm, equiv.subtype_equiv_apply, equiv.refl_symm,
+        equiv.refl_apply, subtype.coe_mk],
+      apply power_basis.lift_gen,
+    end,
+    exact le_supr (λ f : K →ₐ[F] L, f.field_range)
+      ((g.lift_normal L).comp (is_scalar_tower.to_alg_hom F K L))
+      ⟨x, (g.lift_normal_commutes L (intermediate_field.adjoin_simple.gen F x)).trans hg⟩ },
+end
+
+instance normal [h : normal F L] : normal F (normal_closure F K L) :=
+begin
+  change normal F ((normal_closure F K L).restrict_scalars F),
+  rw restrict_scalars_eq_supr_adjoin,
+  apply intermediate_field.normal_supr _,
+  intro x,
+  apply normal.of_is_splitting_field (minpoly F x),
+  apply adjoin_root_set_is_splitting_field,
+  rw minpoly.eq_of_algebra_map_eq (algebra_map K L).injective ((is_integral_algebra_map_iff
+    (algebra_map K L).injective).mp (h.is_integral (algebra_map K L x))) rfl,
+  apply h.splits,
 end
 
 instance is_finite_dimensional [finite_dimensional F K] :
