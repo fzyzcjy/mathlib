@@ -97,14 +97,13 @@ lemma intermediate_field.splitting_field_supr {ι : Type*} {t : ι → intermedi
   (h : ∀ i ∈ s, (p i).is_splitting_field K (t i)) :
   (∏ i in s, p i).is_splitting_field K (⨆ i ∈ s, t i : intermediate_field K L) :=
 begin
+  let F : intermediate_field K L := ⨆ i ∈ s, t i,
+  have hF : ∀ i ∈ s, t i ≤ F := λ i hi, le_supr_of_le i (le_supr (λ _, t i) hi),
   simp only [intermediate_field.is_splitting_field_iff] at h ⊢,
-  refine ⟨splits_prod _ (λ i hi, _), _⟩,
-  { refine polynomial.splits_comp_of_splits (algebra_map K (t i))
-      (intermediate_field.inclusion _).to_ring_hom (h i hi).1,
-    exact le_supr_of_le i (le_supr_of_le hi le_rfl), },
-  { rw root_set_prod h0,
-    refine eq.trans _ (@intermediate_field.gc K _ L _ _).l_supr₂.symm,
-    refine supr_congr (λ i, supr_congr (and.right ∘ h i)) },
+  refine ⟨splits_prod (algebra_map K F) (λ i hi, polynomial.splits_comp_of_splits
+    (algebra_map K (t i)) (intermediate_field.inclusion (hF i hi)).to_ring_hom (h i hi).1), _⟩,
+  simp only [root_set_prod h0, ←set.supr_eq_Union, (@intermediate_field.gc K _ L _ _).l_supr₂],
+  exact supr_congr (λ i, supr_congr (λ hi, (h i hi).2)),
 end
 
 instance intermediate_field.normal_supr
