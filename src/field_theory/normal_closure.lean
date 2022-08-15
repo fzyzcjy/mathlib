@@ -37,19 +37,6 @@ section more_technical_lemmas
 
 variables {K L : Type*} [field K] [field L] [algebra K L]
 
-lemma key_lemma {ι : Type*} {f : ι → intermediate_field K L}
-  (h : ∀ i, algebra.is_algebraic K (f i)) {x : L} (hx : x ∈ ⨆ i, f i) :
-  ∃ s : finset (Σ i, f i), x ∈ ⨆ i ∈ s,
-    intermediate_field.adjoin K ((minpoly K (i.2 : L)).root_set L) :=
-begin
-  refine intermediate_field.exists_finset_of_mem_supr _,
-  refine set_like.le_def.mp (supr_le (λ i x hx, _)) hx,
-  refine set_like.le_def.mp (le_supr_of_le ⟨i, x, hx⟩ le_rfl) _,
-  refine intermediate_field.subset_adjoin K ((minpoly K x).root_set L) _,
-  refine (polynomial.mem_root_set_iff (minpoly.ne_zero _) x).mpr (minpoly.aeval K x),
-  exact is_algebraic_iff_is_integral.mp (intermediate_field.is_algebraic_iff.mp (h i ⟨x, hx⟩)),
-end
-
 open_locale big_operators
 
 open polynomial
@@ -106,32 +93,40 @@ begin
   exact supr_congr (λ i, supr_congr (λ hi, (h i hi).2)),
 end
 
-instance intermediate_field.normal_supr
+namespace intermediate_field
+
+lemma exists_finset_of_mem_supr'' {ι : Type*} {f : ι → intermediate_field K L}
+  (h : ∀ i, algebra.is_algebraic K (f i)) {x : L} (hx : x ∈ ⨆ i, f i) :
+  ∃ s : finset (Σ i, f i), x ∈ ⨆ i ∈ s, adjoin K ((minpoly K (i.2 : f (i.1 : ι))).root_set L) :=
+begin
+  refine exists_finset_of_mem_supr (set_like.le_def.mp (supr_le (λ i x hx, set_like.le_def.mp
+    (le_supr_of_le ⟨i, x, hx⟩ le_rfl) (subset_adjoin K _ _))) hx),
+  rw [intermediate_field.minpoly_eq, subtype.coe_mk, polynomial.mem_root_set, minpoly.aeval],
+  refine minpoly.ne_zero (is_integral_iff.mp (is_algebraic_iff_is_integral.mp (h i ⟨x, hx⟩))),
+end
+
+instance normal_supr
   {ι : Type*} (t : ι → intermediate_field K L) [h : ∀ i, normal K (t i)] :
   normal K (⨆ i, t i : intermediate_field K L) :=
 begin
-  refine ⟨intermediate_field.is_algebraic_supr (λ i, (h i).1), λ x, _⟩,
-  obtain ⟨s, hx⟩ := key_lemma (λ i, (h i).1) x.2,
-  let F : intermediate_field K L := ⨆ i ∈ s,
-    intermediate_field.adjoin K ((minpoly K (i.2 : L)).root_set L),
-  change x.1 ∈ F at hx,
+  refine ⟨is_algebraic_supr (λ i, (h i).1), λ x, _⟩,
+  obtain ⟨s, hx⟩ := exists_finset_of_mem_supr'' (λ i, (h i).1) x.2,
+  let F : intermediate_field K L := ⨆ i ∈ s, adjoin K ((minpoly K (i.2 : t (i.1 : ι))).root_set L),
   have hF : normal K F,
-  { apply normal.of_is_splitting_field (∏ i in s, minpoly K (i.2 : L)),
-    refine intermediate_field.splitting_field_supr (λ i hi, _) (λ i hi, _),
-    { rw ← intermediate_field.minpoly_eq,
-      exact minpoly.ne_zero ((h i.1).is_integral i.2) },
+  { apply normal.of_is_splitting_field (∏ i in s, minpoly K (i.2 : t (i.1 : ι))),
+    refine splitting_field_supr (λ i hi, minpoly.ne_zero ((h i.1).is_integral i.2)) (λ i hi, _),
     apply adjoin_root_set_is_splitting_field,
-    rw ← intermediate_field.minpoly_eq,
     exact polynomial.splits_comp_of_splits _ (algebra_map (t i.1) L) ((h i.1).splits i.2) },
   have hFE : F ≤ ⨆ i, t i,
   { refine supr_le (λ i, supr_le (λ hi, le_supr_of_le i.1 _)),
-    rw [intermediate_field.adjoin_le_iff, ←intermediate_field.minpoly_eq,
-      ←image_root_set ((h i.1).splits i.2) (t i.1).val],
+    rw [adjoin_le_iff, ←image_root_set ((h i.1).splits i.2) (t i.1).val],
     exact λ _ ⟨a, _, h⟩, h ▸ a.2 },
   have := hF.splits ⟨x, hx⟩,
-  rw [intermediate_field.minpoly_eq, subtype.coe_mk, ←intermediate_field.minpoly_eq] at this,
-  exact polynomial.splits_comp_of_splits _ (intermediate_field.inclusion hFE).to_ring_hom this,
+  rw [minpoly_eq, subtype.coe_mk, ←minpoly_eq] at this,
+  exact polynomial.splits_comp_of_splits _ (inclusion hFE).to_ring_hom this,
 end
+
+end intermediate_field
 
 end more_technical_lemmas
 
