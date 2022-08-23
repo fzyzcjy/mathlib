@@ -23,6 +23,8 @@ For a bounded sesquilinear form `B : E →L⋆[𝕜] E →L[𝕜] 𝕜`,
 we define a map `inner_product_space.continuous_linear_map_of_bilin B : E →L[𝕜] E`,
 given by substituting `E →L[𝕜] 𝕜` with `E` using `to_dual`.
 
+We define an inner product on the dual of an inner product space, using polarization.
+We check that with this definition the dual space is an inner product space.
 
 ## References
 
@@ -178,5 +180,28 @@ begin
   rw continuous_linear_map_of_bilin_apply,
   exact is_lax_milgram w,
 end
+
+end inner_product_space
+
+namespace inner_product_space
+open is_R_or_C
+
+variables (𝕜 : Type*)
+variables {E : Type*} [is_R_or_C 𝕜] [inner_product_space 𝕜 E]
+
+local notation `𝓚` := @is_R_or_C.of_real 𝕜 _
+
+/-- The dual of an inner product space satisfies the parallelogram identity. -/
+lemma parallelogram_law_with_dual_norm (α β : normed_space.dual 𝕜 E) :
+  ∥α + β∥ * ∥α + β∥ + ∥α - β∥ * ∥α - β∥ = 2 * (∥α∥ * ∥α∥ + ∥β∥ * ∥β∥) :=
+begin
+  -- is this even true? (without the completeness hypothesis on `E`.) Not clear.
+  -- Idea: apply `analysis.normed_space.riesz_lemma` to `ker (r • α + s • β)`, for each `r`, `s`.
+  sorry
+end
+
+/-- The dual of an inner product space is itself an inner product space. -/
+instance dual_inner_product_space : inner_product_space 𝕜 (normed_space.dual 𝕜 E) :=
+inner_product_space.of_norm (parallelogram_law_with_dual_norm 𝕜)
 
 end inner_product_space
