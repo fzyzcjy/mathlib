@@ -2322,3 +2322,411 @@ lemma submodule.orthogonal_family_self :
 | ff ff := absurd rfl
 
 end orthogonal
+
+section of_norm
+
+variables {E' : Type*} [normed_group E'] [normed_space 𝕜 E']
+
+lemma a_plus_I_b (a b : E') (h : (I : 𝕜) ≠ 0) :
+  a + (I : 𝕜) • b = (I : 𝕜) • (b - (I : 𝕜) • a) :=
+begin
+  have h' := I_mul_I_of_nonzero h,
+  rw [smul_sub I, ←smul_assoc, smul_eq_mul, h', neg_smul, sub_neg_eq_add, one_smul, add_comm]
+end
+
+-- TODO, some useful references:
+-- http://www.mathematik.uni-muenchen.de/~michel/jordan-von_neumann_-_parallelogram_identity.pdf
+-- https://math.stackexchange.com/questions/21792/norms-induced-by-inner-products-and-the-parallelogram-law
+-- https://math.dartmouth.edu/archive/m113w10/public_html/jordan-vneumann-thm.pdf
+
+section
+
+variables (𝕜)
+
+def inner_
+  (x y : E') : 𝕜 :=
+  4⁻¹ * ((𝓚 ∥x + y∥) * (𝓚 ∥x + y∥) - (𝓚 ∥x - y∥) * (𝓚 ∥x - y∥)
+            + (I:𝕜) * (𝓚 ∥x + (I:𝕜) • y∥) * (𝓚 ∥x + (I:𝕜) • y∥)
+            - (I:𝕜) * (𝓚 ∥x - (I:𝕜) • y∥) * (𝓚 ∥x - (I:𝕜) • y∥))
+
+lemma inner_.add_left
+  (h : ∀ x y : E', ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
+  (x y z : E') :
+  inner_ 𝕜 (x + y) z = inner_ 𝕜 x z + inner_ 𝕜 y z :=
+begin
+    simp [inner_],
+    rw ←mul_add,
+    congr,
+    apply is_R_or_C.ext,
+    { simp only [add_zero, I_re, of_real_im, add_monoid_hom.map_add, zero_mul, of_real_re,
+        add_monoid_hom.map_sub, sub_zero, mul_im, mul_re, mul_zero],
+      have : ∥x + y + z∥ * ∥x + y + z∥ = (∥2 • x + y∥ * ∥2 • x + y∥ + ∥2 • z + y∥ * ∥2 • z + y∥) / 2 - ∥x - z∥ * ∥x - z∥,
+      { apply eq_sub_of_add_eq,
+        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
+        rw mul_comm _ (2 : ℝ),
+        symmetry,
+        have h₀ := h (x + y + z) (x - z),
+        convert h₀ using 4; { rw two_smul, abel } },
+      rw this,
+      have : ∥x + y - z∥ * ∥x + y - z∥ = (∥2 • x + y∥ * ∥2 • x + y∥ + ∥y - 2 • z∥ * ∥y - 2 • z∥) / 2 - ∥x + z∥ * ∥x + z∥,
+      { apply eq_sub_of_add_eq,
+        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
+        rw mul_comm _ (2 : ℝ),
+        symmetry,
+        have h₀ := h (x + y - z) (x + z),
+        convert h₀ using 4; { rw two_smul, abel } },
+      rw this,
+      have : ∥2 • z + y∥ * ∥2 • z + y∥ = 2 * (∥y + z∥ * ∥y + z∥ + ∥z∥ * ∥z∥) - ∥y∥ * ∥y∥,
+      { apply eq_sub_of_add_eq,
+        have h₀ := h (y + z) z,
+        convert h₀ using 4; { try { rw two_smul }, abel } },
+      rw this,
+      have : ∥y - 2 • z∥ * ∥y - 2 • z∥ = 2 * (∥y - z∥ * ∥y - z∥ + ∥z∥ * ∥z∥) - ∥y∥ * ∥y∥,
+      { apply eq_sub_of_add_eq,
+        have h₀ := h (y - z) z,
+        conv_lhs at h₀ { rw add_comm },
+        convert h₀ using 4; { try { rw two_smul }, abel }, },
+      rw this,
+      ring },
+    { simp only [of_real_im, add_monoid_hom.map_add, zero_mul, of_real_re, add_monoid_hom.map_sub,
+        sub_zero, mul_im, zero_add, mul_zero],
+      simp_rw [mul_assoc, ←mul_sub, ←mul_add],
+      congr,
+      have : ∥x + y + (I : 𝕜) • z∥ * ∥x + y + (I : 𝕜) • z∥ =
+        (∥2 • x + y∥ * ∥2 • x + y∥ + ∥2 • (I : 𝕜) • z + y∥ * ∥2 • (I : 𝕜) • z + y∥) / 2 -
+        ∥x - (I : 𝕜) • z∥ * ∥x - (I : 𝕜) • z∥,
+      { apply eq_sub_of_add_eq,
+        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
+        rw mul_comm _ (2 : ℝ),
+        symmetry,
+        have h₀ := h (x + y + (I : 𝕜) • z) (x - (I : 𝕜) • z),
+        convert h₀ using 4; { try { rw two_smul }, abel } },
+      rw this,
+      have : ∥x + y - (I : 𝕜) • z∥ * ∥x + y - (I : 𝕜) • z∥ =
+        (∥2 • x + y∥ * ∥2 • x + y∥ + ∥y - 2 • (I : 𝕜) • z∥ * ∥y - 2 • (I : 𝕜) • z∥) / 2 -
+        ∥x + (I : 𝕜) • z∥ * ∥x + (I : 𝕜) • z∥,
+      { apply eq_sub_of_add_eq,
+        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
+        rw mul_comm _ (2 : ℝ),
+        symmetry,
+        have h₀ := h (x + y - (I : 𝕜) • z) (x + (I : 𝕜) • z),
+        convert h₀ using 4; { try { rw two_smul }, abel } },
+      rw this,
+      have : ∥2 • (I : 𝕜) • z + y∥ * ∥2 • (I : 𝕜) • z + y∥ = 2 * (∥y + (I : 𝕜) • z∥ * ∥y + (I : 𝕜) • z∥ + ∥(I : 𝕜) • z∥ * ∥(I : 𝕜) • z∥) - ∥y∥ * ∥y∥,
+      { apply eq_sub_of_add_eq,
+        have h₀ := h (y + (I : 𝕜) • z) ((I : 𝕜) • z),
+        convert h₀ using 4; { try { rw two_smul }, abel } },
+      rw this,
+      have : ∥y - 2 • (I : 𝕜) • z∥ * ∥y - 2 • (I : 𝕜) • z∥ = 2 * (∥y - (I : 𝕜) • z∥ * ∥y - (I : 𝕜) • z∥ + ∥(I : 𝕜) • z∥ * ∥(I : 𝕜) • z∥) - ∥y∥ * ∥y∥,
+      { apply eq_sub_of_add_eq,
+        have h₀ := h (y - (I : 𝕜) • z) ((I : 𝕜) • z),
+        conv_lhs at h₀ { rw add_comm },
+        convert h₀ using 4; { try { rw two_smul }, abel }, },
+      rw this,
+      ring },
+end
+
+section
+variables (E')
+def inner_prop (r : 𝕜) : Prop := ∀ x y : E', inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y
+end
+
+lemma inner_.nat
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  ∀ (r : ℕ) (x y : E'),
+           inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y :=
+begin
+  { intros r x y,
+    rw ←semimodule.nsmul_eq_smul,
+    induction r with r ih,
+    { simp [inner_] },
+    { rw [succ_nsmul', inner_.add_left 𝕜 h, ih, nat.cast_succ, add_mul, one_mul] } },
+end
+
+lemma inner_.nat_prop (r : ℕ)
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  inner_prop 𝕜 E' r :=
+begin
+  intros x y,
+  simp only [ring_hom.map_nat_cast],
+  exact inner_.nat 𝕜 h r x y
+end
+
+lemma inner_.neg_one
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  inner_prop 𝕜 E' (-1 : ℤ) :=
+begin
+  { intros x y,
+    simp only [inner_, neg_mul_eq_neg_mul_symm, one_mul, int.cast_one, one_smul, ring_hom.map_one, conj_neg, int.cast_neg, neg_smul],
+    rw neg_mul_eq_mul_neg,
+    congr' 1,
+    have h₂ : ∥-x + y∥ = ∥x - y∥,
+    { rw [←neg_sub, norm_neg, sub_eq_neg_add], },
+    have h₃ : ∥-x + I • y∥ = ∥x - I • y∥,
+    { rw [←neg_sub, norm_neg, sub_eq_neg_add], },
+    have h₄ : ∥-x - I • y∥ = ∥x + I • y∥,
+    { rw [←neg_add', norm_neg] },
+    rw [←neg_add', norm_neg, h₂, h₃, h₄],
+    ring },
+end
+
+lemma inner_.int_prop (r : ℤ)
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  inner_prop 𝕜 E' r :=
+begin
+  intros x y,
+  have : r = r.sign * r.nat_abs := r.sign_mul_nat_abs.symm,
+  rw this,
+  simp only [int.cast_coe_nat, ring_hom.map_nat_cast, ring_hom.map_int_cast, int.cast_mul,
+    ring_hom.map_mul],
+  rw mul_smul,
+  obtain hr|rfl|hr := lt_trichotomy r 0,
+  { rw int.sign_eq_neg_one_of_neg hr,
+    have hnegone := inner_.neg_one 𝕜 h ((r.nat_abs : 𝕜) • x) y,
+    rw [hnegone, inner_.nat _ h],
+    simp, },
+  { simp [inner_] },
+  { rw int.sign_eq_one_of_pos hr,
+    simp [inner_.nat _ h] }
+end
+
+
+theorem rat.num_div_denom (r : ℚ) :
+↑(r.num) / ↑(r.denom) = r :=
+by rw [← int.cast_coe_nat, ← rat.mk_eq_div, rat.num_denom]
+
+lemma rat_cast_conj (a : ℚ) : conj (a : 𝕜) = a :=
+begin
+  haveI : char_zero 𝕜 := char_zero_R_or_C,
+  convert ring_hom.map_rat_cast _ _,
+  apply_instance,
+end
+
+lemma foo_ℚ (𝕜 : Type*) {E' : Type*} (r : ℚ)
+  [is_R_or_C 𝕜]
+  [normed_group E']
+  [normed_space 𝕜 E']
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
+  (hℕ' : ∀ (r : ℕ) (x y : E'),
+           inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y)
+  (x y : E')
+  (this : (r.denom : 𝕜) ≠ 0) :
+  let S : set 𝕜 :=
+        {r :
+           𝕜 | ∀ (x y : E'),
+           inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y}
+  in (∀ (r : ℤ), ↑r ∈ S) →
+     (r.denom : 𝕜) * (inner_ 𝕜 (((r.num / r.denom : ℚ) : 𝕜) • x) y) =
+      (r.denom : 𝕜) * ((conj (r.num / r.denom : 𝕜)) * inner_ 𝕜 x y) :=
+begin
+  intros S hℤ,
+  rw [←hℕ' r.denom, smul_smul],
+  have h₀ : (r.denom : ℚ) * ((r.num : ℚ) / (r.denom : ℚ)) = r.num,
+  { refine mul_div_cancel' _ _,
+    exact_mod_cast r.pos.ne' },
+  have h₁ : (r.denom : 𝕜) * ((r.num / r.denom : ℚ) : 𝕜) = r.num,
+  { convert mul_div_cancel' _ this using 1, norm_cast, },
+  have h₃ : (r.num / r.denom : 𝕜) = ((r.num / r.denom : ℚ) : 𝕜),
+  { norm_cast },
+  have h₂ : conj (r.num / r.denom : 𝕜) = (r.num / r.denom : 𝕜),
+  { rw h₃, rw rat_cast_conj, },
+  rw h₁,
+  rw h₂,
+  rw hℤ,
+  rw ←mul_assoc,
+  rw ring_hom.map_int_cast,
+  rw mul_div_cancel' _ this,
+end
+
+
+example (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
+  (x y : E')
+  (r : 𝕜) :
+  inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y :=
+begin
+--  admit,
+  let S := { r : 𝕜 | ∀ (x y : E'), inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y },
+  suffices : S = set.univ,
+  { have : r ∈ S,
+    { rw this, exact set.mem_univ _ },
+    rw set.mem_set_of_eq at this,
+    apply this },
+  clear r x y,
+  have hℕ' : ∀ (r : ℕ) (x y : E'), inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y,
+  { apply inner_.nat _ h },
+  have hℕ : ∀ r : ℕ, (r : 𝕜) ∈ S,
+  { intros r,
+    apply inner_.nat_prop _ _ h },
+  have hnegone : ↑(-1 : ℤ) ∈ S,
+  { apply inner_.neg_one _ h },
+  have hℤ : ∀ r : ℤ, (r : 𝕜) ∈ S,
+  { intros r,
+    apply inner_.int_prop _ _ h, },
+  have hℚ : ∀ r : ℚ, (r : 𝕜) ∈ S,
+  { intros r x y,
+    have : (r.denom : 𝕜) ≠ 0,
+    { haveI : char_zero 𝕜 := char_zero_R_or_C,
+      exact_mod_cast r.pos.ne' },
+    rw ←r.num_div_denom,
+    suffices hxxx :
+      (r.denom : 𝕜) * (inner_ 𝕜 (((r.num / r.denom : ℚ) : 𝕜) • x) y) =
+      (r.denom : 𝕜) * ((conj (r.num / r.denom : 𝕜)) * inner_ 𝕜 x y),
+    { rw ←(mul_right_inj' this),
+      convert hxxx,
+      rw rat.num_div_denom },
+    apply foo_ℚ _ _ h hℕ' _ _ this hℤ },
+  admit,
+end
+
+end
+
+/-- Fréchet–von Neumann–Jordan theorm. A normed space `E'` whose norm satisfies the parallelogram
+identity can be given a compatible inner product. -/
+def inner_product_space.of_norm
+  (h : ∀ x y : E', ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  inner_product_space 𝕜 E' :=
+{ inner := λ x y, 4⁻¹ * ((𝓚 ∥x + y∥) * (𝓚 ∥x + y∥) - (𝓚 ∥x - y∥) * (𝓚 ∥x - y∥)
+            + (I:𝕜) * (𝓚 ∥x + (I:𝕜) • y∥) * (𝓚 ∥x + (I:𝕜) • y∥)
+            - (I:𝕜) * (𝓚 ∥x - (I:𝕜) • y∥) * (𝓚 ∥x - (I:𝕜) • y∥)),
+  norm_sq_eq_inner := assume x,
+  begin
+    sorry,
+    have h₁ : norm_sq (4:𝕜) = 16,
+    { have : (of_real 4 : 𝕜) = (4 : 𝕜),
+      { simp only [of_real_one, of_real_bit0] },
+      rw [←this, norm_sq_eq_def', is_R_or_C.norm_eq_abs, is_R_or_C.abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 4)],
+      norm_num },
+    have h₂ : ∥x + x∥ = 2 * ∥x∥,
+    { have : ∥(2 : 𝕜)∥ = 2,
+      { rw [is_R_or_C.norm_eq_abs, is_R_or_C.abs_two] },
+      rw [←this, ←norm_smul, two_smul] },
+    simp only [inner, h₁, h₂, one_im, bit0_zero, add_zero, norm_zero, I_re, of_real_im,
+      add_monoid_hom.map_add, bit0_im, zero_div, zero_mul, add_monoid_hom.map_neg, of_real_re,
+      add_monoid_hom.map_sub, sub_zero, inv_re, one_re, inv_im, bit0_re, mul_re, mul_zero, sub_self,
+      neg_zero],
+    ring
+  end,
+  conj_sym := λ x y, begin
+    simp [inner],
+    congr' 1,
+    { have : (of_real 4⁻¹ : 𝕜) = (4⁻¹ : 𝕜),
+      { simp only [of_real_one, of_real_bit0, of_real_inv]},
+      rw [←this, conj_of_real] },
+    have : y + x = x + y := by abel,
+    rw this,
+    have : y - x = - (x - y) := by abel,
+    rw this,
+    rw norm_neg,
+    by_cases h : (I : 𝕜) = 0,
+    { rw h, simp only [add_zero, zero_mul, sub_zero, neg_zero]},
+    have := abs_I_of_nonzero h,
+    rw ← is_R_or_C.norm_eq_abs at this,
+    rw [a_plus_I_b x y h, a_plus_I_b y x h, norm_smul, norm_smul, this],
+    ring, ring -- huh?
+  end,
+  nonneg_im := λ x, begin
+    sorry,
+    simp [inner],
+    right,
+    by_cases h : (I : 𝕜) = 0,
+    { rw h, simp only [zero_mul, sub_zero, add_monoid_hom.map_zero]},
+    have := abs_I_of_nonzero h,
+    rw ← is_R_or_C.norm_eq_abs at this,
+    rw [a_plus_I_b x x h, norm_smul, this, one_mul, sub_self]
+  end,
+  add_left := assume x y z,
+  begin
+    sorry,
+    simp [inner],
+    rw ←mul_add,
+    congr,
+    apply is_R_or_C.ext,
+    { simp only [add_zero, I_re, of_real_im, add_monoid_hom.map_add, zero_mul, of_real_re,
+        add_monoid_hom.map_sub, sub_zero, mul_im, mul_re, mul_zero],
+      have : ∥x + y + z∥ * ∥x + y + z∥ = (∥2 • x + y∥ * ∥2 • x + y∥ + ∥2 • z + y∥ * ∥2 • z + y∥) / 2 - ∥x - z∥ * ∥x - z∥,
+      { apply eq_sub_of_add_eq,
+        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
+        rw mul_comm _ (2 : ℝ),
+        symmetry,
+        have h₀ := h (x + y + z) (x - z),
+        convert h₀ using 4; { rw two_smul, abel } },
+      rw this,
+      have : ∥x + y - z∥ * ∥x + y - z∥ = (∥2 • x + y∥ * ∥2 • x + y∥ + ∥y - 2 • z∥ * ∥y - 2 • z∥) / 2 - ∥x + z∥ * ∥x + z∥,
+      { apply eq_sub_of_add_eq,
+        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
+        rw mul_comm _ (2 : ℝ),
+        symmetry,
+        have h₀ := h (x + y - z) (x + z),
+        convert h₀ using 4; { rw two_smul, abel } },
+      rw this,
+      have : ∥2 • z + y∥ * ∥2 • z + y∥ = 2 * (∥y + z∥ * ∥y + z∥ + ∥z∥ * ∥z∥) - ∥y∥ * ∥y∥,
+      { apply eq_sub_of_add_eq,
+        have h₀ := h (y + z) z,
+        convert h₀ using 4; { try { rw two_smul }, abel } },
+      rw this,
+      have : ∥y - 2 • z∥ * ∥y - 2 • z∥ = 2 * (∥y - z∥ * ∥y - z∥ + ∥z∥ * ∥z∥) - ∥y∥ * ∥y∥,
+      { apply eq_sub_of_add_eq,
+        have h₀ := h (y - z) z,
+        conv_lhs at h₀ { rw add_comm },
+        convert h₀ using 4; { try { rw two_smul }, abel }, },
+      rw this,
+      ring },
+    { simp only [of_real_im, add_monoid_hom.map_add, zero_mul, of_real_re, add_monoid_hom.map_sub,
+        sub_zero, mul_im, zero_add, mul_zero],
+      simp_rw [mul_assoc, ←mul_sub, ←mul_add],
+      congr,
+      have : ∥x + y + (I : 𝕜) • z∥ * ∥x + y + (I : 𝕜) • z∥ =
+        (∥2 • x + y∥ * ∥2 • x + y∥ + ∥2 • (I : 𝕜) • z + y∥ * ∥2 • (I : 𝕜) • z + y∥) / 2 -
+        ∥x - (I : 𝕜) • z∥ * ∥x - (I : 𝕜) • z∥,
+      { apply eq_sub_of_add_eq,
+        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
+        rw mul_comm _ (2 : ℝ),
+        symmetry,
+        have h₀ := h (x + y + (I : 𝕜) • z) (x - (I : 𝕜) • z),
+        convert h₀ using 4; { try { rw two_smul }, abel } },
+      rw this,
+      have : ∥x + y - (I : 𝕜) • z∥ * ∥x + y - (I : 𝕜) • z∥ =
+        (∥2 • x + y∥ * ∥2 • x + y∥ + ∥y - 2 • (I : 𝕜) • z∥ * ∥y - 2 • (I : 𝕜) • z∥) / 2 -
+        ∥x + (I : 𝕜) • z∥ * ∥x + (I : 𝕜) • z∥,
+      { apply eq_sub_of_add_eq,
+        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
+        rw mul_comm _ (2 : ℝ),
+        symmetry,
+        have h₀ := h (x + y - (I : 𝕜) • z) (x + (I : 𝕜) • z),
+        convert h₀ using 4; { try { rw two_smul }, abel } },
+      rw this,
+      have : ∥2 • (I : 𝕜) • z + y∥ * ∥2 • (I : 𝕜) • z + y∥ = 2 * (∥y + (I : 𝕜) • z∥ * ∥y + (I : 𝕜) • z∥ + ∥(I : 𝕜) • z∥ * ∥(I : 𝕜) • z∥) - ∥y∥ * ∥y∥,
+      { apply eq_sub_of_add_eq,
+        have h₀ := h (y + (I : 𝕜) • z) ((I : 𝕜) • z),
+        convert h₀ using 4; { try { rw two_smul }, abel } },
+      rw this,
+      have : ∥y - 2 • (I : 𝕜) • z∥ * ∥y - 2 • (I : 𝕜) • z∥ = 2 * (∥y - (I : 𝕜) • z∥ * ∥y - (I : 𝕜) • z∥ + ∥(I : 𝕜) • z∥ * ∥(I : 𝕜) • z∥) - ∥y∥ * ∥y∥,
+      { apply eq_sub_of_add_eq,
+        have h₀ := h (y - (I : 𝕜) • z) ((I : 𝕜) • z),
+        conv_lhs at h₀ { rw add_comm },
+        convert h₀ using 4; { try { rw two_smul }, abel }, },
+      rw this,
+      ring },
+  end,
+  smul_left := assume x y r,
+  begin
+    simp [inner],
+    extract_goal,
+    suffices : ∀ r ∈ (set.univ : set 𝕜), inner (r • x) y = conj r * inner x y,
+    { exact this r (set.mem_univ r), },
+    sorry,
+  end }
+
+end of_norm
