@@ -1439,6 +1439,30 @@ begin
   exact hp,
 end
 
+lemma connected.walk_support [decidable_eq V] {u v : V} (p : G.walk u v) :
+  (G.induce (p.support.to_finset : set V)).connected :=
+begin
+  rw connected_iff,
+  split, rotate, simp, constructor, rw list.mem_to_finset, exact walk.start_mem_support p,
+  rintro ⟨x,xh⟩ ⟨y,yh⟩,
+  rw [finset.mem_coe,list.mem_to_finset] at xh yh,
+  obtain ⟨ux,xv,ex⟩ := (walk.mem_support_iff_exists_append).mp xh,
+  obtain ⟨uy,yv,ey⟩ := (walk.mem_support_iff_exists_append).mp yh,
+  let q := ux.reverse.append uy,
+  have : ∀ w ∈ q.support, w ∈ (p.support.to_finset : set V), by
+  { rintro w wq,
+    rw walk.mem_support_append_iff at wq,
+    cases wq,
+    { simp only [ex, finset.mem_coe, list.mem_to_finset, walk.mem_support_append_iff],
+      rw [walk.support_reverse, list.mem_reverse] at wq,
+      exact or.inl wq, },
+    { simp only [ey, finset.mem_coe, list.mem_to_finset, walk.mem_support_append_iff],
+      exact or.inl wq, },
+  },
+  apply nonempty.intro,
+  exact walk.to_induced (p.support.to_finset) q this,
+end
+
 end subgraph
 
 /-! ### Walks of a given length -/
