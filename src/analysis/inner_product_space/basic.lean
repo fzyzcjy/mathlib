@@ -2351,8 +2351,8 @@ variables (𝕜)
 def inner_
   (x y : E') : 𝕜 :=
   4⁻¹ * ((𝓚 ∥x + y∥) * (𝓚 ∥x + y∥) - (𝓚 ∥x - y∥) * (𝓚 ∥x - y∥)
-            + (I:𝕜) * (𝓚 ∥x + (I:𝕜) • y∥) * (𝓚 ∥x + (I:𝕜) • y∥)
-            - (I:𝕜) * (𝓚 ∥x - (I:𝕜) • y∥) * (𝓚 ∥x - (I:𝕜) • y∥))
+            + (I:𝕜) * (𝓚 ∥(I:𝕜) • x + y∥) * (𝓚 ∥(I:𝕜) • x + y∥)
+            - (I:𝕜) * (𝓚 ∥(I:𝕜) • x - y∥) * (𝓚 ∥(I:𝕜) • x - y∥))
 
 lemma inner_.add_left
   (h : ∀ x y : E', ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
@@ -2447,7 +2447,7 @@ begin
   { intros r x y,
     induction r with r ih,
     { simp only [inner_, nat.nat_zero_eq_zero, zero_sub, nat.cast_zero, zero_mul, eq_self_iff_true,
-        zero_smul, zero_add, mul_zero, sub_self, norm_neg] },
+        zero_smul, zero_add, mul_zero, sub_self, norm_neg, smul_zero], },
     { simp only [nat.cast_succ, add_smul, one_smul],
       rw [inner_.add_left 𝕜 h, ih, add_mul, one_mul] } },
 end
@@ -2474,13 +2474,15 @@ begin
       conj_neg, int.cast_neg, neg_smul, neg_one_mul],
     rw neg_mul_comm,
     congr' 1,
+    have h₁ : ∥-x - y∥ = ∥x + y∥,
+    { rw [←neg_add', norm_neg], },
     have h₂ : ∥-x + y∥ = ∥x - y∥,
     { rw [←neg_sub, norm_neg, sub_eq_neg_add], },
-    have h₃ : ∥-x + I • y∥ = ∥x - I • y∥,
-    { rw [←neg_sub, norm_neg, sub_eq_neg_add], },
-    have h₄ : ∥-x - I • y∥ = ∥x + I • y∥,
-    { rw [←neg_add', norm_neg] },
-    rw [←neg_add', norm_neg, h₂, h₃, h₄],
+    have h₃ : ∥(I : 𝕜) • (-x) + y∥ = ∥(I : 𝕜) • x - y∥,
+    { rw [←neg_sub, norm_neg, sub_eq_neg_add, ←smul_neg], },
+    have h₄ : ∥(I : 𝕜) • (-x) - y∥ = ∥(I : 𝕜) • x + y∥,
+    { rw [smul_neg, ←neg_add', norm_neg] },
+    rw [h₁, h₂, h₃, h₄],
     ring },
 end
 
@@ -2500,10 +2502,15 @@ begin
   { rw int.sign_eq_neg_one_of_neg hr,
     have hnegone := inner_.neg_one 𝕜 h ((r.nat_abs : 𝕜) • x) y,
     rw [hnegone, inner_.nat _ h],
-    simp, },
-  { simp [inner_] },
+    simp only [is_R_or_C.conj_neg, neg_mul, one_mul, mul_eq_mul_left_iff, true_or,
+      int.nat_abs_eq_zero, eq_self_iff_true, int.cast_one, map_one, neg_inj, nat.cast_eq_zero,
+      int.cast_neg] },
+  { simp only [inner_, int.cast_zero, zero_sub, nat.cast_zero, zero_mul, eq_self_iff_true,
+      int.sign_zero, zero_smul, zero_add, mul_zero, smul_zero, sub_self, norm_neg,
+      int.nat_abs_zero] },
   { rw int.sign_eq_one_of_pos hr,
-    simp [inner_.nat _ h] }
+    simp only [one_mul, mul_eq_mul_left_iff, true_or, int.nat_abs_eq_zero, eq_self_iff_true,
+      int.cast_one, one_smul, nat.cast_eq_zero, inner_.nat _ h] }
 end
 
 
@@ -2615,13 +2622,6 @@ begin
   { admit },
 end
 
-lemma norm_I : ∥(I : 𝕜)∥^2 = 1 :=
-begin
-rw [is_R_or_C.norm_eq_abs I],
-simp,
-
-end
-
 example (h : ∀ (x y : E'),
          ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
            2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
@@ -2655,29 +2655,24 @@ begin
     { rw [hI, ←nat.cast_zero], apply hℕ },
     rw [hS, set.mem_set_of],
     intros x y,
-    have hII : ∥(I : 𝕜)∥ = 1,
-    { rw [is_R_or_C.norm_eq_abs I, abs_I_of_nonzero hI] },
-    have h1 : ∥x + (I : 𝕜) • y∥ = ∥(I : 𝕜) • x - y∥,
-    { calc ∥x + (I : 𝕜) • y∥ = ∥(-I : 𝕜) • ((I : 𝕜) • x - y)∥ : congr_arg _ _
-      ... = ∥(I : 𝕜) • x - y∥ : _,
-      { rw [smul_sub, smul_smul, neg_smul, sub_neg_eq_add, ←inv_I, inv_mul_cancel hI, one_smul], },
-      { rw [norm_smul, norm_neg, hII, one_mul], } },
-    have h2 : ∥x - (I : 𝕜) • y∥ = ∥(I : 𝕜) • x + y∥,
-    { calc ∥x - (I : 𝕜) • y∥ = ∥(-I : 𝕜) • ((I : 𝕜) • x + y)∥ : congr_arg _ _
-      ... = ∥(I : 𝕜) • x + y∥ : _,
-      { rw [smul_add, smul_smul, neg_smul, ←sub_eq_add_neg, ←inv_I, inv_mul_cancel hI, one_smul], },
-      { rw [norm_smul, norm_neg, hII, one_mul], } },
     have hI' : (-I : 𝕜) * I = 1,
     { rw [←inv_I, inv_mul_cancel hI], },
     rw [conj_I, inner_, inner_, mul_left_comm],
     congr' 1,
-    rw [←smul_add, norm_smul, hII, one_mul],
-    rw [←smul_sub, norm_smul, hII, one_mul],
-    rw [h1, h2, mul_sub, mul_add, mul_sub,
+    rw [smul_smul, I_mul_I_of_nonzero hI, neg_one_smul],
+    rw [mul_sub, mul_add, mul_sub,
       mul_assoc I (𝓚 ∥I • x - y∥), ←mul_assoc (-I) I, hI', one_mul,
-      mul_assoc I (𝓚 ∥I • x + y∥), ←mul_assoc (-I) I, hI', one_mul,
-      ←mul_sub, neg_mul_comm, neg_sub, mul_sub,
-      ←mul_assoc, ←mul_assoc], },
+      mul_assoc I (𝓚 ∥I • x + y∥), ←mul_assoc (-I) I, hI', one_mul],
+    have h₁ : ∥-x - y∥ = ∥x + y∥,
+    { rw [←neg_add', norm_neg], },
+    have h₂ : ∥-x + y∥ = ∥x - y∥,
+    { rw [←neg_sub, norm_neg, sub_eq_neg_add], },
+    rw [h₁, h₂],
+    simp only [sub_eq_add_neg, mul_assoc],
+    rw ←neg_mul_eq_neg_mul,
+    rw ←neg_mul_eq_neg_mul,
+    rw neg_neg,
+    abel },
   admit,
 end
 
