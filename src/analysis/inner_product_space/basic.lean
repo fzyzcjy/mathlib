@@ -11,6 +11,9 @@ import analysis.normed_space.banach
 import linear_algebra.bilinear_form
 import linear_algebra.sesquilinear_form
 
+-- TODO reduce? Move of_norm elsewhere?
+import analysis.normed_space.lattice_ordered_group
+
 /-!
 # Inner product space
 
@@ -2325,7 +2328,9 @@ end orthogonal
 
 section of_norm
 
-variables {E' : Type*} [normed_group E'] [normed_space 𝕜 E']
+variables {E' : Type*} [normed_add_comm_group E'] [normed_space 𝕜 E']
+
+local notation `𝓚` := algebra_map ℝ _
 
 lemma a_plus_I_b (a b : E') (h : (I : 𝕜) ≠ 0) :
   a + (I : 𝕜) • b = (I : 𝕜) • (b - (I : 𝕜) • a) :=
@@ -2354,12 +2359,13 @@ lemma inner_.add_left
   (x y z : E') :
   inner_ 𝕜 (x + y) z = inner_ 𝕜 x z + inner_ 𝕜 y z :=
 begin
-    simp [inner_],
+    simp only [inner_],
     rw ←mul_add,
     congr,
     apply is_R_or_C.ext,
     { simp only [add_zero, I_re, of_real_im, add_monoid_hom.map_add, zero_mul, of_real_re,
-        add_monoid_hom.map_sub, sub_zero, mul_im, mul_re, mul_zero],
+        add_monoid_hom.map_sub, sub_zero, mul_im, mul_re, mul_zero, of_real_re],
+        sorry,
       have : ∥x + y + z∥ * ∥x + y + z∥ = (∥2 • x + y∥ * ∥2 • x + y∥ + ∥2 • z + y∥ * ∥2 • z + y∥) / 2 - ∥x - z∥ * ∥x - z∥,
       { apply eq_sub_of_add_eq,
         rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
@@ -2388,7 +2394,7 @@ begin
         convert h₀ using 4; { try { rw two_smul }, abel }, },
       rw this,
       ring },
-    { simp only [of_real_im, add_monoid_hom.map_add, zero_mul, of_real_re, add_monoid_hom.map_sub,
+    sorry { simp only [of_real_im, add_monoid_hom.map_add, zero_mul, of_real_re, add_monoid_hom.map_sub,
         sub_zero, mul_im, zero_add, mul_zero],
       simp_rw [mul_assoc, ←mul_sub, ←mul_add],
       congr,
@@ -2439,10 +2445,11 @@ lemma inner_.nat
            inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y :=
 begin
   { intros r x y,
-    rw ←semimodule.nsmul_eq_smul,
     induction r with r ih,
-    { simp [inner_] },
-    { rw [succ_nsmul', inner_.add_left 𝕜 h, ih, nat.cast_succ, add_mul, one_mul] } },
+    { simp only [inner_, nat.nat_zero_eq_zero, zero_sub, nat.cast_zero, zero_mul, eq_self_iff_true,
+        zero_smul, zero_add, mul_zero, sub_self, norm_neg] },
+    { simp only [nat.cast_succ, add_smul, one_smul],
+      rw [inner_.add_left 𝕜 h, ih, add_mul, one_mul] } },
 end
 
 lemma inner_.nat_prop (r : ℕ)
@@ -2452,7 +2459,7 @@ lemma inner_.nat_prop (r : ℕ)
   inner_prop 𝕜 E' r :=
 begin
   intros x y,
-  simp only [ring_hom.map_nat_cast],
+  simp only [map_nat_cast],
   exact inner_.nat 𝕜 h r x y
 end
 
@@ -2463,8 +2470,9 @@ lemma inner_.neg_one
   inner_prop 𝕜 E' (-1 : ℤ) :=
 begin
   { intros x y,
-    simp only [inner_, neg_mul_eq_neg_mul_symm, one_mul, int.cast_one, one_smul, ring_hom.map_one, conj_neg, int.cast_neg, neg_smul],
-    rw neg_mul_eq_mul_neg,
+    simp only [inner_, neg_mul_eq_neg_mul, one_mul, int.cast_one, one_smul, ring_hom.map_one,
+      conj_neg, int.cast_neg, neg_smul, neg_one_mul],
+    rw neg_mul_comm,
     congr' 1,
     have h₂ : ∥-x + y∥ = ∥x - y∥,
     { rw [←neg_sub, norm_neg, sub_eq_neg_add], },
@@ -2485,7 +2493,7 @@ begin
   intros x y,
   have : r = r.sign * r.nat_abs := r.sign_mul_nat_abs.symm,
   rw this,
-  simp only [int.cast_coe_nat, ring_hom.map_nat_cast, ring_hom.map_int_cast, int.cast_mul,
+  simp only [int.cast_coe_nat, map_nat_cast, map_int_cast, int.cast_mul,
     ring_hom.map_mul],
   rw mul_smul,
   obtain hr|rfl|hr := lt_trichotomy r 0,
@@ -2499,20 +2507,20 @@ begin
 end
 
 
+/-
 theorem rat.num_div_denom (r : ℚ) :
 ↑(r.num) / ↑(r.denom) = r :=
 by rw [← int.cast_coe_nat, ← rat.mk_eq_div, rat.num_denom]
+-/
 
 lemma rat_cast_conj (a : ℚ) : conj (a : 𝕜) = a :=
 begin
-  haveI : char_zero 𝕜 := char_zero_R_or_C,
-  convert ring_hom.map_rat_cast _ _,
-  apply_instance,
+  rw map_rat_cast,
 end
 
 lemma foo_ℚ (𝕜 : Type*) {E' : Type*} (r : ℚ)
   [is_R_or_C 𝕜]
-  [normed_group E']
+  [normed_add_comm_group E']
   [normed_space 𝕜 E']
   (h : ∀ (x y : E'),
          ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
@@ -2544,8 +2552,67 @@ begin
   rw h₂,
   rw hℤ,
   rw ←mul_assoc,
-  rw ring_hom.map_int_cast,
+  rw map_int_cast,
   rw mul_div_cancel' _ this,
+end
+
+lemma inner_.rat_prop (r : ℚ)
+  (h : ∀ (x y : E'), ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  inner_prop 𝕜 E' r :=
+begin
+  intros x y,
+  have : (r.denom : 𝕜) ≠ 0,
+  { haveI : char_zero 𝕜 := is_R_or_C.char_zero_R_or_C,
+    exact_mod_cast r.pos.ne' },
+  rw ←r.num_div_denom,
+  suffices hxxx :
+    (r.denom : 𝕜) * (inner_ 𝕜 (((r.num / r.denom : ℚ) : 𝕜) • x) y) =
+    (r.denom : 𝕜) * ((conj (r.num / r.denom : 𝕜)) * inner_ 𝕜 x y),
+  { rw ←(mul_right_inj' this),
+    convert hxxx,
+    rw [rat.num_div_denom],
+    norm_cast,
+    simp only [eq_self_iff_true, rat.num_denom], },
+  apply foo_ℚ _ _ h _ _ _ this _,
+  { apply inner_.nat _ h, },
+  { intros z, apply inner_.int_prop _ _ h, },
+end
+
+lemma inner_.real_prop (r : ℝ)
+  (h : ∀ (x y : E'), ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
+  inner_prop 𝕜 E' r :=
+begin
+  intros x y,
+  revert r,
+  rw ←function.funext_iff,
+  refine rat.dense_embedding_coe_real.dense.equalizer _ _ _,
+  sorry { simp only [inner_ ],
+    continuity, },
+  sorry { simp only [inner_ ],
+    continuity, },
+  funext X,
+  simp only [function.comp_app, is_R_or_C.of_real_rat_cast],
+  exact inner_.rat_prop _ _ h _ _,
+end
+lemma yyy (𝕜 : Type u_1) {E' : Type u_4}
+  [is_R_or_C 𝕜]
+  [normed_add_comm_group E']
+  [normed_space 𝕜 E']
+  (h : ∀ (x y : E'),
+         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
+           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
+  (x y : E')
+  (r : 𝕜)
+  (this : (λ r : ℝ, inner_ 𝕜 ((r : 𝕜) • x) y) = (λ r : ℝ, conj r * inner_ 𝕜 x y)) :
+  inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y :=
+begin
+  apply is_R_or_C.ext,
+  { simp only [inner_, mul_re, map_add, map_sub, conj_re, conj_im, inv_re, bit0_re, one_re,
+      bit0_im, one_im, inv_im, map_neg, mul_im, bit0_zero, neg_zero, zero_div, zero_mul, sub_zero,
+      add_zero],
+
+    sorry },
+  { admit },
 end
 
 
@@ -2556,8 +2623,7 @@ example (h : ∀ (x y : E'),
   (r : 𝕜) :
   inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y :=
 begin
---  admit,
-  let S := { r : 𝕜 | ∀ (x y : E'), inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y },
+  set S := { r : 𝕜 | ∀ (x y : E'), inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y } with hS,
   suffices : S = set.univ,
   { have : r ∈ S,
     { rw this, exact set.mem_univ _ },
@@ -2575,23 +2641,21 @@ begin
   { intros r,
     apply inner_.int_prop _ _ h, },
   have hℚ : ∀ r : ℚ, (r : 𝕜) ∈ S,
-  { intros r x y,
-    have : (r.denom : 𝕜) ≠ 0,
-    { haveI : char_zero 𝕜 := char_zero_R_or_C,
-      exact_mod_cast r.pos.ne' },
-    rw ←r.num_div_denom,
-    suffices hxxx :
-      (r.denom : 𝕜) * (inner_ 𝕜 (((r.num / r.denom : ℚ) : 𝕜) • x) y) =
-      (r.denom : 𝕜) * ((conj (r.num / r.denom : 𝕜)) * inner_ 𝕜 x y),
-    { rw ←(mul_right_inj' this),
-      convert hxxx,
-      rw rat.num_div_denom },
-    apply foo_ℚ _ _ h hℕ' _ _ this hℤ },
+  { intros r, apply inner_.rat_prop _ _ h },
+  have hℝ : ∀ r : ℝ, (r : 𝕜) ∈ S,
+  { intros r, apply inner_.real_prop _ _ h },
   admit,
 end
 
 end
 
+/-
+  extends normed_add_comm_group E, normed_space 𝕜 E, has_inner 𝕜 E :=
+(norm_sq_eq_inner : ∀ (x : E), ∥x∥^2 = re (inner x x))
+(conj_sym  : ∀ x y, conj (inner y x) = inner x y)
+(add_left  : ∀ x y z, inner (x + y) z = inner x z + inner y z)
+(smul_left : ∀ x y r, inner (r • x) y = (conj r) * inner x y)
+-/
 /-- Fréchet–von Neumann–Jordan theorm. A normed space `E'` whose norm satisfies the parallelogram
 identity can be given a compatible inner product. -/
 def inner_product_space.of_norm
