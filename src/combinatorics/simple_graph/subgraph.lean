@@ -270,6 +270,12 @@ instance : bounded_order (subgraph G) :=
 
 @[simp] lemma not_bot_adj {v w : V} : ¬(⊥ : subgraph G).adj v w := not_false
 
+@[simp] lemma verts_inf (H₁ H₂ : G.subgraph) :
+  (H₁ ⊓ H₂).verts = H₁.verts ∩ H₂.verts := rfl
+
+@[simp] lemma verts_sup (H₁ H₂ : G.subgraph) :
+  (H₁ ⊔ H₂).verts = H₁.verts ∪ H₂.verts := rfl
+
 @[simp] lemma inf_adj {H₁ H₂ : subgraph G} {v w : V} :
   (H₁ ⊓ H₂).adj v w ↔ H₁.adj v w ∧ H₂.adj v w := iff.rfl
 
