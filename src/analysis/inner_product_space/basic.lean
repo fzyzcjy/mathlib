@@ -2615,6 +2615,12 @@ begin
   { admit },
 end
 
+lemma norm_I : ∥(I : 𝕜)∥^2 = 1 :=
+begin
+rw [is_R_or_C.norm_eq_abs I],
+simp,
+
+end
 
 example (h : ∀ (x y : E'),
          ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
@@ -2627,7 +2633,7 @@ begin
   suffices : S = set.univ,
   { have : r ∈ S,
     { rw this, exact set.mem_univ _ },
-    rw set.mem_set_of_eq at this,
+    rw set.mem_set_of at this,
     apply this },
   clear r x y,
   have hℕ' : ∀ (r : ℕ) (x y : E'), inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y,
@@ -2644,6 +2650,34 @@ begin
   { intros r, apply inner_.rat_prop _ _ h },
   have hℝ : ∀ r : ℝ, (r : 𝕜) ∈ S,
   { intros r, apply inner_.real_prop _ _ h },
+  have hI : I ∈ S,
+  { by_cases hI : (I : 𝕜) = 0,
+    { rw [hI, ←nat.cast_zero], apply hℕ },
+    rw [hS, set.mem_set_of],
+    intros x y,
+    have hII : ∥(I : 𝕜)∥ = 1,
+    { rw [is_R_or_C.norm_eq_abs I, abs_I_of_nonzero hI] },
+    have h1 : ∥x + (I : 𝕜) • y∥ = ∥(I : 𝕜) • x - y∥,
+    { calc ∥x + (I : 𝕜) • y∥ = ∥(-I : 𝕜) • ((I : 𝕜) • x - y)∥ : congr_arg _ _
+      ... = ∥(I : 𝕜) • x - y∥ : _,
+      { rw [smul_sub, smul_smul, neg_smul, sub_neg_eq_add, ←inv_I, inv_mul_cancel hI, one_smul], },
+      { rw [norm_smul, norm_neg, hII, one_mul], } },
+    have h2 : ∥x - (I : 𝕜) • y∥ = ∥(I : 𝕜) • x + y∥,
+    { calc ∥x - (I : 𝕜) • y∥ = ∥(-I : 𝕜) • ((I : 𝕜) • x + y)∥ : congr_arg _ _
+      ... = ∥(I : 𝕜) • x + y∥ : _,
+      { rw [smul_add, smul_smul, neg_smul, ←sub_eq_add_neg, ←inv_I, inv_mul_cancel hI, one_smul], },
+      { rw [norm_smul, norm_neg, hII, one_mul], } },
+    have hI' : (-I : 𝕜) * I = 1,
+    { rw [←inv_I, inv_mul_cancel hI], },
+    rw [conj_I, inner_, inner_, mul_left_comm],
+    congr' 1,
+    rw [←smul_add, norm_smul, hII, one_mul],
+    rw [←smul_sub, norm_smul, hII, one_mul],
+    rw [h1, h2, mul_sub, mul_add, mul_sub,
+      mul_assoc I (𝓚 ∥I • x - y∥), ←mul_assoc (-I) I, hI', one_mul,
+      mul_assoc I (𝓚 ∥I • x + y∥), ←mul_assoc (-I) I, hI', one_mul,
+      ←mul_sub, neg_mul_comm, neg_sub, mul_sub,
+      ←mul_assoc, ←mul_assoc], },
   admit,
 end
 
