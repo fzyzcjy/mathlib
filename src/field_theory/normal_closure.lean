@@ -15,8 +15,8 @@ def alg_hom.field_range : intermediate_field F L :=
 lemma intermediate_field.map_top : f.field_range = (⊤ : intermediate_field F L').map f :=
 intermediate_field.ext (λ x, ⟨λ ⟨y, h⟩, ⟨y, trivial, h⟩, λ ⟨y, _, h⟩, ⟨y, h⟩⟩)
 
-noncomputable def alg_hom.equiv_field_range (f : L' →ₐ[F] L) : L' ≃ₐ[F] f.field_range :=
-alg_equiv.of_injective f f.to_ring_hom.injective
+-- noncomputable def alg_hom.equiv_field_range (f : L' →ₐ[F] L) : L' ≃ₐ[F] f.field_range :=
+-- alg_equiv.of_injective f f.to_ring_hom.injective
 
 def intermediate_field.comap : intermediate_field F L' :=
 { inv_mem' := λ x hx, show f x⁻¹ ∈ S, from (f.map_inv x).symm ▸ S.inv_mem hx,
