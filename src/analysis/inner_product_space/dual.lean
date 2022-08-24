@@ -183,6 +183,7 @@ end
 
 end inner_product_space
 
+/-
 namespace inner_product_space
 open is_R_or_C
 
@@ -205,3 +206,4 @@ instance dual_inner_product_space : inner_product_space 𝕜 (normed_space.dual 
 inner_product_space.of_norm (parallelogram_law_with_dual_norm 𝕜)
 
 end inner_product_space
+-/
