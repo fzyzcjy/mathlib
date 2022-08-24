@@ -13,6 +13,7 @@ import linear_algebra.sesquilinear_form
 
 -- TODO reduce? Move of_norm elsewhere?
 import analysis.normed_space.lattice_ordered_group
+import topology.algebra.algebra
 
 /-!
 # Inner product space
@@ -2585,6 +2586,50 @@ begin
   { intros z, apply inner_.int_prop _ _ h, },
 end
 
+lemma inner_.continuous {α} [topological_space α] (f : α → E') (g :  α → E')
+  (hf : continuous f) (hg : continuous g) :
+  continuous (λ x, inner_ 𝕜 (f x) (g x)) :=
+begin
+  simp only [inner_ ],
+  refine continuous_const.mul _,
+  refine continuous.sub _ _,
+  refine continuous.add _ _,
+  refine continuous.sub _ _,
+  refine continuous.mul _ _,
+  apply (continuous_algebra_map ℝ 𝕜).comp,
+  apply continuous_norm.comp,
+  apply continuous.add hf hg,
+  apply (continuous_algebra_map ℝ 𝕜).comp,
+  apply continuous_norm.comp,
+  apply continuous.add hf hg,
+
+  refine continuous.mul _ _,
+  apply (continuous_algebra_map ℝ 𝕜).comp,
+  apply continuous_norm.comp,
+  apply continuous.sub hf hg,
+  apply (continuous_algebra_map ℝ 𝕜).comp,
+  apply continuous_norm.comp,
+  apply continuous.sub hf hg,
+
+  refine continuous.mul _ _,
+  refine continuous_const.mul _,
+  apply (continuous_algebra_map ℝ 𝕜).comp,
+  apply continuous_norm.comp,
+  refine continuous.add (hf.const_smul _) hg,
+  apply (continuous_algebra_map ℝ 𝕜).comp,
+  apply continuous_norm.comp,
+  refine continuous.add (hf.const_smul _) hg,
+
+  refine continuous.mul _ _,
+  refine continuous_const.mul _,
+  apply (continuous_algebra_map ℝ 𝕜).comp,
+  apply continuous_norm.comp,
+  refine continuous.sub (hf.const_smul _) hg,
+  apply (continuous_algebra_map ℝ 𝕜).comp,
+  apply continuous_norm.comp,
+  refine continuous.sub (hf.const_smul _) hg,
+end
+
 lemma inner_.real_prop (r : ℝ)
   (h : ∀ (x y : E'), ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
   inner_prop 𝕜 E' r :=
@@ -2593,36 +2638,22 @@ begin
   revert r,
   rw ←function.funext_iff,
   refine rat.dense_embedding_coe_real.dense.equalizer _ _ _,
-  sorry { simp only [inner_ ],
-    continuity, },
-  sorry { simp only [inner_ ],
-    continuity, },
+  { apply inner_.continuous,
+    apply continuous.smul,
+    exact continuous_of_real,
+    apply continuous_const,
+    apply continuous_const },
+  { apply continuous.mul,
+    exact continuous_conj.comp continuous_of_real,
+    apply inner_.continuous,
+    apply continuous_const,
+    apply continuous_const },
   funext X,
   simp only [function.comp_app, is_R_or_C.of_real_rat_cast],
   exact inner_.rat_prop _ _ h _ _,
 end
-lemma yyy (𝕜 : Type u_1) {E' : Type u_4}
-  [is_R_or_C 𝕜]
-  [normed_add_comm_group E']
-  [normed_space 𝕜 E']
-  (h : ∀ (x y : E'),
-         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
-           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
-  (x y : E')
-  (r : 𝕜)
-  (this : (λ r : ℝ, inner_ 𝕜 ((r : 𝕜) • x) y) = (λ r : ℝ, conj r * inner_ 𝕜 x y)) :
-  inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y :=
-begin
-  apply is_R_or_C.ext,
-  { simp only [inner_, mul_re, map_add, map_sub, conj_re, conj_im, inv_re, bit0_re, one_re,
-      bit0_im, one_im, inv_im, map_neg, mul_im, bit0_zero, neg_zero, zero_div, zero_mul, sub_zero,
-      add_zero],
 
-    sorry },
-  { admit },
-end
-
-example (h : ∀ (x y : E'),
+lemma inner_.smul_left (h : ∀ (x y : E'),
          ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
            2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
   (x y : E')
@@ -2630,9 +2661,9 @@ example (h : ∀ (x y : E'),
   inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y :=
 begin
   set S := { r : 𝕜 | ∀ (x y : E'), inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y } with hS,
-  suffices : S = set.univ,
+  suffices : set.univ ⊆ S,
   { have : r ∈ S,
-    { rw this, exact set.mem_univ _ },
+    { apply this, exact set.mem_univ _ },
     rw set.mem_set_of at this,
     apply this },
   clear r x y,
@@ -2673,31 +2704,27 @@ begin
     rw ←neg_mul_eq_neg_mul,
     rw neg_neg,
     abel },
-  admit,
+  rintros z -,
+  rw [←re_add_im z, hS, set.mem_set_of],
+  intros x y,
+  rw [add_smul, inner_.add_left _ h, hℝ, ←smul_smul, hℝ, hI],
+  simp only [conj_of_real, conj_I, map_add, map_mul],
+  ring,
 end
 
 end
 
-/-
-  extends normed_add_comm_group E, normed_space 𝕜 E, has_inner 𝕜 E :=
-(norm_sq_eq_inner : ∀ (x : E), ∥x∥^2 = re (inner x x))
-(conj_sym  : ∀ x y, conj (inner y x) = inner x y)
-(add_left  : ∀ x y z, inner (x + y) z = inner x z + inner y z)
-(smul_left : ∀ x y r, inner (r • x) y = (conj r) * inner x y)
--/
 /-- Fréchet–von Neumann–Jordan theorm. A normed space `E'` whose norm satisfies the parallelogram
 identity can be given a compatible inner product. -/
 def inner_product_space.of_norm
   (h : ∀ x y : E', ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
   inner_product_space 𝕜 E' :=
-{ inner := λ x y, 4⁻¹ * ((𝓚 ∥x + y∥) * (𝓚 ∥x + y∥) - (𝓚 ∥x - y∥) * (𝓚 ∥x - y∥)
-            + (I:𝕜) * (𝓚 ∥x + (I:𝕜) • y∥) * (𝓚 ∥x + (I:𝕜) • y∥)
-            - (I:𝕜) * (𝓚 ∥x - (I:𝕜) • y∥) * (𝓚 ∥x - (I:𝕜) • y∥)),
+{ inner := inner_ 𝕜,
   norm_sq_eq_inner := assume x,
   begin
-    sorry,
+    simp only [inner, inner_],
     have h₁ : norm_sq (4:𝕜) = 16,
-    { have : (of_real 4 : 𝕜) = (4 : 𝕜),
+    { have : ((4 : ℝ) : 𝕜) = (4 : 𝕜),
       { simp only [of_real_one, of_real_bit0] },
       rw [←this, norm_sq_eq_def', is_R_or_C.norm_eq_abs, is_R_or_C.abs_of_nonneg (by norm_num : (0 : ℝ) ≤ 4)],
       norm_num },
@@ -2709,10 +2736,11 @@ def inner_product_space.of_norm
       add_monoid_hom.map_add, bit0_im, zero_div, zero_mul, add_monoid_hom.map_neg, of_real_re,
       add_monoid_hom.map_sub, sub_zero, inv_re, one_re, inv_im, bit0_re, mul_re, mul_zero, sub_self,
       neg_zero],
-    ring
+    sorry { ring }
   end,
   conj_sym := λ x y, begin
-    simp [inner],
+    simp only [inner, inner_],
+    sorry {
     congr' 1,
     { have : (of_real 4⁻¹ : 𝕜) = (4⁻¹ : 𝕜),
       { simp only [of_real_one, of_real_bit0, of_real_inv]},
@@ -2727,8 +2755,9 @@ def inner_product_space.of_norm
     have := abs_I_of_nonzero h,
     rw ← is_R_or_C.norm_eq_abs at this,
     rw [a_plus_I_b x y h, a_plus_I_b y x h, norm_smul, norm_smul, this],
-    ring, ring -- huh?
+    ring, ring } -- huh?
   end,
+/-
   nonneg_im := λ x, begin
     sorry,
     simp [inner],
@@ -2739,87 +2768,8 @@ def inner_product_space.of_norm
     rw ← is_R_or_C.norm_eq_abs at this,
     rw [a_plus_I_b x x h, norm_smul, this, one_mul, sub_self]
   end,
-  add_left := assume x y z,
-  begin
-    sorry,
-    simp [inner],
-    rw ←mul_add,
-    congr,
-    apply is_R_or_C.ext,
-    { simp only [add_zero, I_re, of_real_im, add_monoid_hom.map_add, zero_mul, of_real_re,
-        add_monoid_hom.map_sub, sub_zero, mul_im, mul_re, mul_zero],
-      have : ∥x + y + z∥ * ∥x + y + z∥ = (∥2 • x + y∥ * ∥2 • x + y∥ + ∥2 • z + y∥ * ∥2 • z + y∥) / 2 - ∥x - z∥ * ∥x - z∥,
-      { apply eq_sub_of_add_eq,
-        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
-        rw mul_comm _ (2 : ℝ),
-        symmetry,
-        have h₀ := h (x + y + z) (x - z),
-        convert h₀ using 4; { rw two_smul, abel } },
-      rw this,
-      have : ∥x + y - z∥ * ∥x + y - z∥ = (∥2 • x + y∥ * ∥2 • x + y∥ + ∥y - 2 • z∥ * ∥y - 2 • z∥) / 2 - ∥x + z∥ * ∥x + z∥,
-      { apply eq_sub_of_add_eq,
-        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
-        rw mul_comm _ (2 : ℝ),
-        symmetry,
-        have h₀ := h (x + y - z) (x + z),
-        convert h₀ using 4; { rw two_smul, abel } },
-      rw this,
-      have : ∥2 • z + y∥ * ∥2 • z + y∥ = 2 * (∥y + z∥ * ∥y + z∥ + ∥z∥ * ∥z∥) - ∥y∥ * ∥y∥,
-      { apply eq_sub_of_add_eq,
-        have h₀ := h (y + z) z,
-        convert h₀ using 4; { try { rw two_smul }, abel } },
-      rw this,
-      have : ∥y - 2 • z∥ * ∥y - 2 • z∥ = 2 * (∥y - z∥ * ∥y - z∥ + ∥z∥ * ∥z∥) - ∥y∥ * ∥y∥,
-      { apply eq_sub_of_add_eq,
-        have h₀ := h (y - z) z,
-        conv_lhs at h₀ { rw add_comm },
-        convert h₀ using 4; { try { rw two_smul }, abel }, },
-      rw this,
-      ring },
-    { simp only [of_real_im, add_monoid_hom.map_add, zero_mul, of_real_re, add_monoid_hom.map_sub,
-        sub_zero, mul_im, zero_add, mul_zero],
-      simp_rw [mul_assoc, ←mul_sub, ←mul_add],
-      congr,
-      have : ∥x + y + (I : 𝕜) • z∥ * ∥x + y + (I : 𝕜) • z∥ =
-        (∥2 • x + y∥ * ∥2 • x + y∥ + ∥2 • (I : 𝕜) • z + y∥ * ∥2 • (I : 𝕜) • z + y∥) / 2 -
-        ∥x - (I : 𝕜) • z∥ * ∥x - (I : 𝕜) • z∥,
-      { apply eq_sub_of_add_eq,
-        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
-        rw mul_comm _ (2 : ℝ),
-        symmetry,
-        have h₀ := h (x + y + (I : 𝕜) • z) (x - (I : 𝕜) • z),
-        convert h₀ using 4; { try { rw two_smul }, abel } },
-      rw this,
-      have : ∥x + y - (I : 𝕜) • z∥ * ∥x + y - (I : 𝕜) • z∥ =
-        (∥2 • x + y∥ * ∥2 • x + y∥ + ∥y - 2 • (I : 𝕜) • z∥ * ∥y - 2 • (I : 𝕜) • z∥) / 2 -
-        ∥x + (I : 𝕜) • z∥ * ∥x + (I : 𝕜) • z∥,
-      { apply eq_sub_of_add_eq,
-        rw eq_div_iff (by norm_num : (2 : ℝ) ≠ 0),
-        rw mul_comm _ (2 : ℝ),
-        symmetry,
-        have h₀ := h (x + y - (I : 𝕜) • z) (x + (I : 𝕜) • z),
-        convert h₀ using 4; { try { rw two_smul }, abel } },
-      rw this,
-      have : ∥2 • (I : 𝕜) • z + y∥ * ∥2 • (I : 𝕜) • z + y∥ = 2 * (∥y + (I : 𝕜) • z∥ * ∥y + (I : 𝕜) • z∥ + ∥(I : 𝕜) • z∥ * ∥(I : 𝕜) • z∥) - ∥y∥ * ∥y∥,
-      { apply eq_sub_of_add_eq,
-        have h₀ := h (y + (I : 𝕜) • z) ((I : 𝕜) • z),
-        convert h₀ using 4; { try { rw two_smul }, abel } },
-      rw this,
-      have : ∥y - 2 • (I : 𝕜) • z∥ * ∥y - 2 • (I : 𝕜) • z∥ = 2 * (∥y - (I : 𝕜) • z∥ * ∥y - (I : 𝕜) • z∥ + ∥(I : 𝕜) • z∥ * ∥(I : 𝕜) • z∥) - ∥y∥ * ∥y∥,
-      { apply eq_sub_of_add_eq,
-        have h₀ := h (y - (I : 𝕜) • z) ((I : 𝕜) • z),
-        conv_lhs at h₀ { rw add_comm },
-        convert h₀ using 4; { try { rw two_smul }, abel }, },
-      rw this,
-      ring },
-  end,
-  smul_left := assume x y r,
-  begin
-    simp [inner],
-    extract_goal,
-    suffices : ∀ r ∈ (set.univ : set 𝕜), inner (r • x) y = conj r * inner x y,
-    { exact this r (set.mem_univ r), },
-    sorry,
-  end }
+-/
+  add_left := inner_.add_left _ h,
+  smul_left := inner_.smul_left _ h }
 
 end of_norm
