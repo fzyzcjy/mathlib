@@ -30,21 +30,23 @@ inner product space, Hilbert space, norm
 - https://math.dartmouth.edu/archive/m113w10/public_html/jordan-vneumann-thm.pdf
 -/
 
-variables {𝕜 E F : Type*} [is_R_or_C 𝕜]
-
-variables {E' : Type*} [normed_add_comm_group E'] [normed_space 𝕜 E']
+variables {𝕜 : Type*} [is_R_or_C 𝕜] {E' : Type*} [normed_add_comm_group E'] [normed_space 𝕜 E']
 
 local notation `𝓚` := algebra_map ℝ 𝕜
+open is_R_or_C
+open_locale complex_conjugate
 
 section
 
 variables (𝕜)
 
-def inner_
+noncomputable def inner_
   (x y : E') : 𝕜 :=
   4⁻¹ * ((𝓚 ∥x + y∥) * (𝓚 ∥x + y∥) - (𝓚 ∥x - y∥) * (𝓚 ∥x - y∥)
             + (I:𝕜) * (𝓚 ∥(I:𝕜) • x + y∥) * (𝓚 ∥(I:𝕜) • x + y∥)
             - (I:𝕜) * (𝓚 ∥(I:𝕜) • x - y∥) * (𝓚 ∥(I:𝕜) • x - y∥))
+
+variables {𝕜}
 
 lemma inner_.add_left_aux1
   (h : ∀ x y : E', ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
@@ -187,14 +189,14 @@ begin
   simp only [←map_add, ←mul_add],
   congr,
   { rw [←add_sub_assoc, inner_.add_left_aux2' h, inner_.add_left_aux4' h] },
-  { rw [inner_.add_left_aux5 𝕜 h, inner_.add_left_aux6 𝕜 h,
-      inner_.add_left_aux7 𝕜 h, inner_.add_left_aux8 𝕜 h],
+  { rw [inner_.add_left_aux5 h, inner_.add_left_aux6 h,
+      inner_.add_left_aux7 h, inner_.add_left_aux8 h],
     simp only [map_sub, map_mul, map_add, div_eq_mul_inv],
     ring },
 end
 
 section
-variables (E')
+variables (𝕜 E')
 def inner_prop (r : 𝕜) : Prop := ∀ x y : E', inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y
 end
 
@@ -210,7 +212,7 @@ begin
   { simp only [inner_, nat.nat_zero_eq_zero, zero_sub, nat.cast_zero, zero_mul, eq_self_iff_true,
       zero_smul, zero_add, mul_zero, sub_self, norm_neg, smul_zero], },
   { simp only [nat.cast_succ, add_smul, one_smul],
-    rw [inner_.add_left 𝕜 h, ih, add_mul, one_mul] },
+    rw [inner_.add_left h, ih, add_mul, one_mul] },
 end
 
 lemma inner_.nat_prop (r : ℕ)
@@ -221,7 +223,7 @@ lemma inner_.nat_prop (r : ℕ)
 begin
   intros x y,
   simp only [map_nat_cast],
-  exact inner_.nat 𝕜 h r x y
+  exact inner_.nat h r x y
 end
 
 lemma inner_.neg_one
@@ -261,8 +263,8 @@ begin
   rw mul_smul,
   obtain hr|rfl|hr := lt_trichotomy r 0,
   { rw int.sign_eq_neg_one_of_neg hr,
-    have hnegone := inner_.neg_one 𝕜 h ((r.nat_abs : 𝕜) • x) y,
-    rw [hnegone, inner_.nat _ h],
+    have hnegone := inner_.neg_one h ((r.nat_abs : 𝕜) • x) y,
+    rw [hnegone, inner_.nat h],
     simp only [is_R_or_C.conj_neg, neg_mul, one_mul, mul_eq_mul_left_iff, true_or,
       int.nat_abs_eq_zero, eq_self_iff_true, int.cast_one, map_one, neg_inj, nat.cast_eq_zero,
       int.cast_neg] },
@@ -271,7 +273,7 @@ begin
       int.nat_abs_zero] },
   { rw int.sign_eq_one_of_pos hr,
     simp only [one_mul, mul_eq_mul_left_iff, true_or, int.nat_abs_eq_zero, eq_self_iff_true,
-      int.cast_one, one_smul, nat.cast_eq_zero, inner_.nat _ h] }
+      int.cast_one, one_smul, nat.cast_eq_zero, inner_.nat h] }
 end
 
 lemma inner_.rat_prop (r : ℚ)
@@ -291,7 +293,7 @@ begin
     rw [rat.num_div_denom],
     norm_cast,
     simp only [eq_self_iff_true, rat.num_denom], },
-  rw [←inner_.nat _ h r.denom, smul_smul],
+  rw [←inner_.nat h r.denom, smul_smul],
   have h₀ : (r.denom : ℚ) * ((r.num : ℚ) / (r.denom : ℚ)) = r.num,
   { refine mul_div_cancel' _ _,
     exact_mod_cast r.pos.ne' },
@@ -303,7 +305,7 @@ begin
   { rw h₃, rw map_rat_cast, },
   rw h₁,
   rw h₂,
-  rw inner_.int_prop _ _ h,
+  rw inner_.int_prop _ h,
   rw ←mul_assoc,
   rw map_int_cast,
   rw mul_div_cancel' _ this,
@@ -373,7 +375,7 @@ begin
     apply continuous_const },
   funext X,
   simp only [function.comp_app, is_R_or_C.of_real_rat_cast],
-  exact inner_.rat_prop _ _ h _ _,
+  exact inner_.rat_prop _ h _ _,
 end
 
 lemma inner_.smul_left (h : ∀ (x y : E'),
@@ -391,19 +393,19 @@ begin
     apply this },
   clear r x y,
   have hℕ' : ∀ (r : ℕ) (x y : E'), inner_ 𝕜 ((r : 𝕜) • x) y = (r : 𝕜) * inner_ 𝕜 x y,
-  { apply inner_.nat _ h },
+  { apply inner_.nat h },
   have hℕ : ∀ r : ℕ, (r : 𝕜) ∈ S,
   { intros r,
-    apply inner_.nat_prop _ _ h },
+    apply inner_.nat_prop _ h },
   have hnegone : ↑(-1 : ℤ) ∈ S,
-  { apply inner_.neg_one _ h },
+  { apply inner_.neg_one h },
   have hℤ : ∀ r : ℤ, (r : 𝕜) ∈ S,
   { intros r,
-    apply inner_.int_prop _ _ h, },
+    apply inner_.int_prop _ h, },
   have hℚ : ∀ r : ℚ, (r : 𝕜) ∈ S,
-  { intros r, apply inner_.rat_prop _ _ h },
+  { intros r, apply inner_.rat_prop _ h },
   have hℝ : ∀ r : ℝ, (r : 𝕜) ∈ S,
-  { intros r, apply inner_.real_prop _ _ h },
+  { intros r, apply inner_.real_prop _ h },
   have hI : I ∈ S,
   { by_cases hI : (I : 𝕜) = 0,
     { rw [hI, ←nat.cast_zero], apply hℕ },
@@ -430,15 +432,12 @@ begin
   rintros z -,
   rw [←re_add_im z, hS, set.mem_set_of],
   intros x y,
-  rw [add_smul, inner_.add_left _ h, hℝ, ←smul_smul, hℝ, hI],
+  rw [add_smul, inner_.add_left h, hℝ, ←smul_smul, hℝ, hI],
   simp only [conj_of_real, conj_I, map_add, map_mul],
   ring,
 end
 
-lemma inner_.norm_sq {𝕜 : Type u_1} {E' : Type u_4}
-  [is_R_or_C 𝕜]
-  [normed_add_comm_group E']
-  [normed_space 𝕜 E']
+lemma inner_.norm_sq
   (h : ∀ (x y : E'),
          ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
            2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
@@ -466,10 +465,7 @@ end
 lemma norm_I_of_nonzero {𝕜} [is_R_or_C 𝕜] (hI : (I : 𝕜) ≠ 0) : ∥(I : 𝕜)∥ = 1 :=
 by simpa only [is_R_or_C.norm_eq_abs] using abs_I_of_nonzero hI
 
-lemma inner_.conj_sym {𝕜 : Type u_1} {E' : Type u_4}
-  [is_R_or_C 𝕜]
-  [normed_add_comm_group E']
-  [normed_space 𝕜 E']
+lemma inner_.conj_sym
   (h : ∀ (x y : E'),
          ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
            2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
@@ -504,11 +500,11 @@ end
 
 /-- Fréchet–von Neumann–Jordan theorm. A normed space `E'` whose norm satisfies the parallelogram
 identity can be given a compatible inner product. -/
-def inner_product_space.of_norm
+noncomputable def inner_product_space.of_norm
   (h : ∀ x y : E', ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
   inner_product_space 𝕜 E' :=
 { inner := inner_ 𝕜,
   norm_sq_eq_inner := inner_.norm_sq h,
   conj_sym := inner_.conj_sym h,
-  add_left := inner_.add_left _ h,
-  smul_left := inner_.smul_left _ h }
+  add_left := inner_.add_left h,
+  smul_left := inner_.smul_left h }
