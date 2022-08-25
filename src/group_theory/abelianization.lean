@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kenny Lau, Michael Howes
 -/
 import group_theory.commutator
+import group_theory.finiteness
 import group_theory.quotient_group
 
 /-!
@@ -55,6 +56,23 @@ begin
     rwa subgroup.commutator_comm (commutator G).centralizer },
   rw [subgroup.commutator_comm, subgroup.commutator_eq_bot_iff_le_centralizer],
   exact set.centralizer_subset (subgroup.commutator_mono le_top le_top),
+end
+
+instance commutator_fg (G : Type*) [group G] [finite {g | ∃ g₁ g₂ : G, ⁅g₁, g₂⁆ = g}] :
+  group.fg (commutator G) :=
+begin
+  haveI : finite {g | ∃ g₁ g₂ ∈ (⊤ : subgroup G), ⁅g₁, g₂⁆ = g},
+  { simpa only [subgroup.mem_top, exists_true_left] },
+  apply subgroup.closure_finite_fg,
+end
+
+lemma rank_commutator_le_card (G : Type*) [group G] [finite {g | ∃ g₁ g₂ : G, ⁅g₁, g₂⁆ = g}] :
+  group.rank (commutator G) ≤ nat.card {g | ∃ g₁ g₂ : G, ⁅g₁, g₂⁆ = g} :=
+begin
+  haveI : finite {g | ∃ g₁ g₂ ∈ (⊤ : subgroup G), ⁅g₁, g₂⁆ = g},
+  { simpa only [subgroup.mem_top, exists_true_left] },
+  apply (subgroup.rank_closure_finite_le_nat_card _).trans,
+  simp only [subgroup.mem_top, exists_true_left],
 end
 
 /-- The abelianization of G is the quotient of G by its commutator subgroup. -/
