@@ -40,6 +40,7 @@ section
 
 variables (𝕜)
 
+/-- Auxiliary definition of the inner product derived from the norm. -/
 noncomputable def inner_
   (x y : E') : 𝕜 :=
   4⁻¹ * ((𝓚 ∥x + y∥) * (𝓚 ∥x + y∥) - (𝓚 ∥x - y∥) * (𝓚 ∥x - y∥)
@@ -197,6 +198,7 @@ end
 
 section
 variables (𝕜 E')
+/-- Auxiliary definition for the `add_left` property -/
 def inner_prop (r : 𝕜) : Prop := ∀ x y : E', inner_ 𝕜 (r • x) y = conj r * inner_ 𝕜 x y
 end
 
@@ -226,15 +228,11 @@ begin
   exact inner_.nat h r x y
 end
 
-lemma inner_.neg_one
-  (h : ∀ (x y : E'),
-         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
-           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
-  inner_prop 𝕜 E' (-1 : ℤ) :=
+lemma inner_.neg_one : inner_prop 𝕜 E' (-1 : ℤ) :=
 begin
   intros x y,
   simp only [inner_, neg_mul_eq_neg_mul, one_mul, int.cast_one, one_smul, ring_hom.map_one,
-    conj_neg, int.cast_neg, neg_smul, neg_one_mul],
+    map_neg, int.cast_neg, neg_smul, neg_one_mul],
   rw neg_mul_comm,
   congr' 1,
   have h₁ : ∥-x - y∥ = ∥x + y∥,
@@ -263,9 +261,9 @@ begin
   rw mul_smul,
   obtain hr|rfl|hr := lt_trichotomy r 0,
   { rw int.sign_eq_neg_one_of_neg hr,
-    have hnegone := inner_.neg_one h ((r.nat_abs : 𝕜) • x) y,
+    have hnegone := inner_.neg_one ((r.nat_abs : 𝕜) • x) y,
     rw [hnegone, inner_.nat h],
-    simp only [is_R_or_C.conj_neg, neg_mul, one_mul, mul_eq_mul_left_iff, true_or,
+    simp only [map_neg, neg_mul, one_mul, mul_eq_mul_left_iff, true_or,
       int.nat_abs_eq_zero, eq_self_iff_true, int.cast_one, map_one, neg_inj, nat.cast_eq_zero,
       int.cast_neg] },
   { simp only [inner_, int.cast_zero, zero_sub, nat.cast_zero, zero_mul, eq_self_iff_true,
@@ -398,7 +396,7 @@ begin
   { intros r,
     apply inner_.nat_prop _ h },
   have hnegone : ↑(-1 : ℤ) ∈ S,
-  { apply inner_.neg_one h },
+  { apply inner_.neg_one },
   have hℤ : ∀ r : ℤ, (r : 𝕜) ∈ S,
   { intros r,
     apply inner_.int_prop _ h, },
@@ -437,12 +435,7 @@ begin
   ring,
 end
 
-lemma inner_.norm_sq
-  (h : ∀ (x y : E'),
-         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
-           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
-  (x : E') :
-  ∥x∥ ^ 2 = re (inner_ 𝕜 x x) :=
+lemma inner_.norm_sq (x : E') :  ∥x∥ ^ 2 = re (inner_ 𝕜 x x) :=
 begin
   simp only [inner_],
   have h₁ : norm_sq (4:𝕜) = 16,
@@ -465,12 +458,7 @@ end
 lemma norm_I_of_nonzero {𝕜} [is_R_or_C 𝕜] (hI : (I : 𝕜) ≠ 0) : ∥(I : 𝕜)∥ = 1 :=
 by simpa only [is_R_or_C.norm_eq_abs] using abs_I_of_nonzero hI
 
-lemma inner_.conj_sym
-  (h : ∀ (x y : E'),
-         ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ =
-           2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥))
-  (x y : E') :
-  conj (inner_ 𝕜 y x) = inner_ 𝕜 x y :=
+lemma inner_.conj_sym (x y : E') : conj (inner_ 𝕜 y x) = inner_ 𝕜 x y :=
 begin
   simp only [inner_],
   have h4 : conj (4⁻¹ : 𝕜) = 4⁻¹,
@@ -504,7 +492,7 @@ noncomputable def inner_product_space.of_norm
   (h : ∀ x y : E', ∥x + y∥ * ∥x + y∥ + ∥x - y∥ * ∥x - y∥ = 2 * (∥x∥ * ∥x∥ + ∥y∥ * ∥y∥)) :
   inner_product_space 𝕜 E' :=
 { inner := inner_ 𝕜,
-  norm_sq_eq_inner := inner_.norm_sq h,
-  conj_sym := inner_.conj_sym h,
+  norm_sq_eq_inner := inner_.norm_sq,
+  conj_sym := inner_.conj_sym,
   add_left := inner_.add_left h,
   smul_left := inner_.smul_left h }
