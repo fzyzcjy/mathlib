@@ -362,7 +362,7 @@ end
 
 end subgroup
 
-namespace quotient_group
+section quotient_group
 
 @[to_additive] instance fg [group.fg G] (N : subgroup G) [subgroup.normal N] : group.fg $ G ⧸ N :=
 group.fg_of_surjective $ quotient_group.mk'_surjective N
