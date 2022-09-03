@@ -296,8 +296,8 @@ noncomputable def group.rank [h : group.fg G] :=
 
 variables {G} {G' : Type*} [group G']
 
-@[to_additive] lemma group.rank_le_of_surjective [group.fg G] (f : G →* G')
-  (hf : function.surjective f) : @group.rank G' _ (group.fg_of_surjective hf) ≤ group.rank G :=
+@[to_additive] lemma group.rank_le_of_surjective [group.fg G] [group.fg G'] (f : G →* G')
+  (hf : function.surjective f) : group.rank G' ≤ group.rank G :=
 begin
   classical,
   obtain ⟨S, hS1, hS2⟩ := group.rank_spec G,
