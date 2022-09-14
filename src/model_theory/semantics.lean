@@ -659,6 +659,10 @@ infix (name := sentence.realize) ` ⊨ `:51 := sentence.realize
   M ⊨ φ.not ↔ ¬ M ⊨ φ :=
 iff.rfl
 
+lemma formula.realize_equiv_sentence (φ : L.formula α) :=
+  (equiv_sentence φ).realize M ↔ sorry :=
+sorry
+
 @[simp] lemma Lhom.realize_on_sentence [L'.Structure M] (φ : L →ᴸ L') [φ.is_expansion_on M]
   (ψ : L.sentence) :
   M ⊨ φ.on_sentence ψ ↔ M ⊨ ψ :=
