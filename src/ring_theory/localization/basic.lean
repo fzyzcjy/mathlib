@@ -9,6 +9,7 @@ import group_theory.monoid_localization
 import ring_theory.ideal.basic
 import ring_theory.non_zero_divisors
 import tactic.ring_exp
+import tactic.polyrith
 
 /-!
 # Localizations of commutative rings
@@ -941,8 +942,8 @@ begin
   rw r_eq_r' at h ⊢,
   cases h with t ht,
   use t,
-  rw [neg_mul, neg_mul, ht],
-  ring_nf,
+  dsimp at *,
+  linear_combination - ht,
 end
 
 instance : has_neg (localization M) := ⟨localization.neg⟩
@@ -972,11 +973,12 @@ instance : comm_ring (localization M) :=
    .. localization.comm_semiring }
 
 lemma sub_mk (a c) (b d) : (mk a b : localization M) - mk c d = mk (d * a - b * c) (b * d) :=
-calc  mk a b - mk c d
-    = mk a b + (- mk c d) : sub_eq_add_neg _ _
-... = mk a b + (mk (-c) d) : by rw neg_mk
-... = mk (b * (-c) + d * a) (b * d) : add_mk _ _ _ _
-... = mk (d * a - b * c) (b * d) : by congr'; ring
+begin
+  have := add_mk a b (-c) d,
+  simp only [← neg_mk] at this,
+  ring_nf at *,
+  linear_combination this,
+end
 
 lemma mk_int_cast (m : ℤ) : (mk m 1 : localization M) = m :=
 by simpa using @mk_algebra_map R _ M ℤ _ _ m
@@ -1062,11 +1064,11 @@ theorem is_domain_of_le_non_zero_divisors
       intros z w h,
       cases surj M z with x hx,
       cases surj M w with y hy,
-      have : z * w * algebra_map A S y.2 * algebra_map A S x.2 =
-        algebra_map A S x.1 * algebra_map A S y.1,
-      by rw [mul_assoc z, hy, ←hx]; ring,
-      rw [h, zero_mul, zero_mul, ← (algebra_map A S).map_mul] at this,
-      cases eq_zero_or_eq_zero_of_mul_eq_zero ((to_map_eq_zero_iff S hM).mp this.symm) with H H,
+      have h₁ := (algebra_map A S).map_mul x.1 y.1,
+      have h₂ : algebra_map A S (x.1 * y.1) = 0,
+      { linear_combination algebra_map A S x.2 * algebra_map A S y.2 * h
+         - w * algebra_map A S y.2 * hx - algebra_map A S x.1 * hy + h₁ },
+      cases eq_zero_or_eq_zero_of_mul_eq_zero ((to_map_eq_zero_iff S hM).mp h₂) with H H,
       { exact or.inl (eq_zero_of_fst_eq_zero hx H) },
       { exact or.inr (eq_zero_of_fst_eq_zero hy H) },
     end,
@@ -1097,7 +1099,11 @@ begin
   refine ⟨is_localization.injective _ hM, λ x, _⟩,
   obtain ⟨r, ⟨m, hm⟩, rfl⟩ := mk'_surjective M x,
   obtain ⟨n, hn⟩ := hR.mul_inv_cancel (non_zero_divisors.ne_zero $ hM hm),
-  exact ⟨r * n, by erw [eq_mk'_iff_mul_eq, ←map_mul, mul_assoc, mul_comm n, hn, mul_one]⟩
+  exact ⟨r * n, begin
+    simp only [eq_mk'_iff_mul_eq, ← map_mul, subtype.coe_mk],
+    congr' 1,
+    linear_combination r * hn,
+   end⟩
 end
 
 /-- If `R` is a field, then localizing at a submonoid not containing `0` adds no new elements. -/
