@@ -38,7 +38,7 @@ open_locale nnreal ennreal measure_theory probability_theory big_operators topol
 namespace measure_theory
 
 variables {Ω : Type*} {m0 : measurable_space Ω} {μ : measure Ω}
-  {ℱ : filtration ℕ m0} {f : ℕ → Ω → ℝ} {ω : Ω}
+  {ℱ : filtration ℕ Ω m0} {f : ℕ → Ω → ℝ} {ω : Ω}
 
 /-!
 ### One sided martingale bound
@@ -296,7 +296,8 @@ lemma adapted_process (hs : ∀ n, measurable_set[ℱ n] (s n)) :
 λ n, finset.strongly_measurable_sum' _ $ λ k hk, strongly_measurable_one.indicator $
   ℱ.mono (finset.mem_range.1 hk) _ $ hs _
 
-lemma martingale_part_process_ae_eq (ℱ : filtration ℕ m0) (μ : measure Ω) (s : ℕ → set Ω) (n : ℕ) :
+lemma martingale_part_process_ae_eq (ℱ : filtration ℕ Ω m0) (μ : measure Ω) (s : ℕ → set Ω)
+  (n : ℕ) :
   martingale_part ℱ μ (process s) n =
   ∑ k in finset.range n, ((s (k + 1)).indicator 1 - μ[(s (k + 1)).indicator 1 | ℱ k]) :=
 begin
@@ -305,7 +306,8 @@ begin
   simp only [process, finset.sum_range_succ_sub_sum],
 end
 
-lemma predictable_part_process_ae_eq (ℱ : filtration ℕ m0) (μ : measure Ω) (s : ℕ → set Ω) (n : ℕ) :
+lemma predictable_part_process_ae_eq (ℱ : filtration ℕ Ω m0) (μ : measure Ω) (s : ℕ → set Ω)
+  (n : ℕ) :
   predictable_part ℱ μ (process s) n =
   ∑ k in finset.range n, μ[(s (k + 1)).indicator (1 : Ω → ℝ) | ℱ k] :=
 begin

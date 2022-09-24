@@ -37,13 +37,13 @@ namespace measure_theory
 
 variables {Ω E : Type*} {m0 : measurable_space Ω} {μ : measure Ω}
   [normed_add_comm_group E] [normed_space ℝ E] [complete_space E]
-  {f : ℕ → Ω → E} {ℱ : filtration ℕ m0} {n : ℕ}
+  {f : ℕ → Ω → E} {ℱ : filtration ℕ Ω m0} {n : ℕ}
 
 /-- Any `ℕ`-indexed stochastic process can be written as the sum of a martingale and a predictable
 process. This is the predictable process. See `martingale_part` for the martingale. -/
 noncomputable
 def predictable_part {m0 : measurable_space Ω}
-  (ℱ : filtration ℕ m0) (μ : measure Ω) (f : ℕ → Ω → E) : ℕ → Ω → E :=
+  (ℱ : filtration ℕ Ω m0) (μ : measure Ω) (f : ℕ → Ω → E) : ℕ → Ω → E :=
 λ n, ∑ i in finset.range n, μ[f (i+1) - f i | ℱ i]
 
 @[simp] lemma predictable_part_zero : predictable_part ℱ μ f 0 = 0 :=
@@ -61,10 +61,11 @@ lemma adapted_predictable_part' : adapted ℱ (λ n, predictable_part ℱ μ f n
 process. This is the martingale. See `predictable_part` for the predictable process. -/
 noncomputable
 def martingale_part {m0 : measurable_space Ω}
-  (ℱ : filtration ℕ m0) (μ : measure Ω) (f : ℕ → Ω → E) : ℕ → Ω → E :=
+  (ℱ : filtration ℕ Ω m0) (μ : measure Ω) (f : ℕ → Ω → E) : ℕ → Ω → E :=
 λ n, f n - predictable_part ℱ μ f n
 
-lemma martingale_part_add_predictable_part (ℱ : filtration ℕ m0) (μ : measure Ω) (f : ℕ → Ω → E) :
+lemma martingale_part_add_predictable_part (ℱ : filtration ℕ Ω m0) (μ : measure Ω)
+  (f : ℕ → Ω → E) :
   martingale_part ℱ μ f + predictable_part ℱ μ f = f :=
 sub_add_cancel _ _
 
@@ -174,7 +175,7 @@ end
 section difference
 
 lemma predictable_part_bdd_difference {R : ℝ≥0} {f : ℕ → Ω → ℝ}
-  (ℱ : filtration ℕ m0) (hbdd : ∀ᵐ ω ∂μ, ∀ i, |f (i + 1) ω - f i ω| ≤ R) :
+  (ℱ : filtration ℕ Ω m0) (hbdd : ∀ᵐ ω ∂μ, ∀ i, |f (i + 1) ω - f i ω| ≤ R) :
   ∀ᵐ ω ∂μ, ∀ i, |predictable_part ℱ μ f (i + 1) ω - predictable_part ℱ μ f i ω| ≤ R :=
 begin
   simp_rw [predictable_part, finset.sum_apply, finset.sum_range_succ_sub_sum],
@@ -182,7 +183,7 @@ begin
 end
 
 lemma martingale_part_bdd_difference {R : ℝ≥0} {f : ℕ → Ω → ℝ}
-  (ℱ : filtration ℕ m0) (hbdd : ∀ᵐ ω ∂μ, ∀ i, |f (i + 1) ω - f i ω| ≤ R) :
+  (ℱ : filtration ℕ Ω m0) (hbdd : ∀ᵐ ω ∂μ, ∀ i, |f (i + 1) ω - f i ω| ≤ R) :
   ∀ᵐ ω ∂μ, ∀ i, |martingale_part ℱ μ f (i + 1) ω - martingale_part ℱ μ f i ω| ≤ ↑(2 * R) :=
 begin
   filter_upwards [hbdd, predictable_part_bdd_difference ℱ hbdd] with ω hω₁ hω₂ i,

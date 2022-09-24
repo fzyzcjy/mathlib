@@ -237,7 +237,7 @@ end inequalities
 lemma hitting_is_stopping_time
   [conditionally_complete_linear_order ι] [is_well_order ι (<)] [countable ι]
   [topological_space β] [pseudo_metrizable_space β] [measurable_space β] [borel_space β]
-  {f : filtration ι m} {u : ι → Ω → β} {s : set β} {n n' : ι}
+  {f : filtration ι Ω m} {u : ι → Ω → β} {s : set β} {n n' : ι}
   (hu : adapted f u) (hs : measurable_set s) :
   is_stopping_time f (hitting u s n n') :=
 begin
@@ -271,7 +271,7 @@ lemma is_stopping_time_hitting_is_stopping_time
   [conditionally_complete_linear_order ι] [is_well_order ι (<)] [countable ι]
   [topological_space ι] [order_topology ι] [first_countable_topology ι]
   [topological_space β] [pseudo_metrizable_space β] [measurable_space β] [borel_space β]
-  {f : filtration ι m} {u : ι → Ω → β} {τ : Ω → ι} (hτ : is_stopping_time f τ)
+  {f : filtration ι Ω m} {u : ι → Ω → β} {τ : Ω → ι} (hτ : is_stopping_time f τ)
   {N : ι} (hτbdd : ∀ x, τ x ≤ N) {s : set β} (hs : measurable_set s) (hf : adapted f u) :
   is_stopping_time f (λ x, hitting u s (τ x) N x) :=
 begin
@@ -294,7 +294,7 @@ end
 
 section complete_lattice
 
-variables [complete_lattice ι] {u : ι → Ω → β} {s : set β} {f : filtration ι m}
+variables [complete_lattice ι] {u : ι → Ω → β} {s : set β} {f : filtration ι Ω m}
 
 lemma hitting_eq_Inf (ω : Ω) : hitting u s ⊥ ⊤ ω = Inf {i : ι | u i ω ∈ s} :=
 begin
@@ -311,7 +311,7 @@ end complete_lattice
 section conditionally_complete_linear_order_bot
 
 variables [conditionally_complete_linear_order_bot ι] [is_well_order ι (<)]
-variables {u : ι → Ω → β} {s : set β} {f : filtration ℕ m}
+variables {u : ι → Ω → β} {s : set β} {f : filtration ℕ Ω m}
 
 lemma hitting_bot_le_iff {i n : ι} {ω : Ω} (hx : ∃ j, j ≤ n ∧ u j ω ∈ s) :
   hitting u s ⊥ n ω ≤ i ↔ ∃ j ≤ i, u j ω ∈ s :=

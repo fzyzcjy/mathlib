@@ -28,7 +28,7 @@ open_locale nnreal ennreal measure_theory probability_theory
 
 namespace measure_theory
 
-variables {Ω : Type*} {m0 : measurable_space Ω} {μ : measure Ω} {𝒢 : filtration ℕ m0}
+variables {Ω : Type*} {m0 : measurable_space Ω} {μ : measure Ω} {𝒢 : filtration ℕ Ω m0}
   {f : ℕ → Ω → ℝ} {τ π : Ω → ℕ}
 
 -- We may generalize the below lemma to functions taking value in a `normed_lattice_add_comm_group`.

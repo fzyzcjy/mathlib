@@ -43,31 +43,31 @@ namespace measure_theory
 variables {Ω E ι : Type*} [preorder ι]
   {m0 : measurable_space Ω} {μ : measure Ω}
   [normed_add_comm_group E] [normed_space ℝ E] [complete_space E]
-  {f g : ι → Ω → E} {ℱ : filtration ι m0}
+  {f g : ι → Ω → E} {ℱ : filtration ι Ω m0}
 
 /-- A family of functions `f : ι → Ω → E` is a martingale with respect to a filtration `ℱ` if `f`
 is adapted with respect to `ℱ` and for all `i ≤ j`, `μ[f j | ℱ i] =ᵐ[μ] f i`. -/
-def martingale (f : ι → Ω → E) (ℱ : filtration ι m0) (μ : measure Ω) : Prop :=
+def martingale (f : ι → Ω → E) (ℱ : filtration ι Ω m0) (μ : measure Ω) : Prop :=
 adapted ℱ f ∧ ∀ i j, i ≤ j → μ[f j | ℱ i] =ᵐ[μ] f i
 
 /-- A family of integrable functions `f : ι → Ω → E` is a supermartingale with respect to a
 filtration `ℱ` if `f` is adapted with respect to `ℱ` and for all `i ≤ j`,
 `μ[f j | ℱ.le i] ≤ᵐ[μ] f i`. -/
-def supermartingale [has_le E] (f : ι → Ω → E) (ℱ : filtration ι m0) (μ : measure Ω) : Prop :=
+def supermartingale [has_le E] (f : ι → Ω → E) (ℱ : filtration ι Ω m0) (μ : measure Ω) : Prop :=
 adapted ℱ f ∧ (∀ i j, i ≤ j → μ[f j | ℱ i] ≤ᵐ[μ] f i) ∧ ∀ i, integrable (f i) μ
 
 /-- A family of integrable functions `f : ι → Ω → E` is a submartingale with respect to a
 filtration `ℱ` if `f` is adapted with respect to `ℱ` and for all `i ≤ j`,
 `f i ≤ᵐ[μ] μ[f j | ℱ.le i]`. -/
-def submartingale [has_le E] (f : ι → Ω → E) (ℱ : filtration ι m0) (μ : measure Ω) : Prop :=
+def submartingale [has_le E] (f : ι → Ω → E) (ℱ : filtration ι Ω m0) (μ : measure Ω) : Prop :=
 adapted ℱ f ∧ (∀ i j, i ≤ j → f i ≤ᵐ[μ] μ[f j | ℱ i]) ∧ ∀ i, integrable (f i) μ
 
-lemma martingale_const (ℱ : filtration ι m0) (μ : measure Ω) [is_finite_measure μ] (x : E) :
+lemma martingale_const (ℱ : filtration ι Ω m0) (μ : measure Ω) [is_finite_measure μ] (x : E) :
   martingale (λ _ _, x) ℱ μ :=
 ⟨adapted_const ℱ _, λ i j hij, by rw condexp_const (ℱ.le _)⟩
 
 lemma martingale_const_fun [order_bot ι]
-  (ℱ : filtration ι m0) (μ : measure Ω) [is_finite_measure μ]
+  (ℱ : filtration ι Ω m0) (μ : measure Ω) [is_finite_measure μ]
   {f : Ω → E} (hf : strongly_measurable[ℱ ⊥] f) (hfint : integrable f μ) :
   martingale (λ _, f) ℱ μ :=
 begin
@@ -77,7 +77,7 @@ begin
 end
 
 variables (E)
-lemma martingale_zero (ℱ : filtration ι m0) (μ : measure Ω) :
+lemma martingale_zero (ℱ : filtration ι Ω m0) (μ : measure Ω) :
   martingale (0 : ι → Ω → E) ℱ μ :=
 ⟨adapted_zero E ℱ, λ i j hij, by { rw [pi.zero_apply, condexp_zero], simp, }⟩
 variables {E}
@@ -141,7 +141,7 @@ lemma martingale_iff [partial_order E] : martingale f ℱ μ ↔
 ⟨λ hf, ⟨hf.supermartingale, hf.submartingale⟩,
  λ ⟨hf₁, hf₂⟩, ⟨hf₁.1, λ i j hij, (hf₁.2.1 i j hij).antisymm (hf₂.2.1 i j hij)⟩⟩
 
-lemma martingale_condexp (f : Ω → E) (ℱ : filtration ι m0) (μ : measure Ω)
+lemma martingale_condexp (f : Ω → E) (ℱ : filtration ι Ω m0) (μ : measure Ω)
   [sigma_finite_filtration μ ℱ] :
   martingale (λ i, μ[f | ℱ i]) ℱ μ :=
 ⟨λ i, strongly_measurable_condexp, λ i j hij, condexp_condexp_of_le (ℱ.mono hij) (ℱ.le j)⟩
@@ -395,7 +395,7 @@ end submartingale
 
 section nat
 
-variables {𝒢 : filtration ℕ m0}
+variables {𝒢 : filtration ℕ Ω m0}
 
 lemma submartingale_of_set_integral_le_succ [is_finite_measure μ]
   {f : ℕ → Ω → ℝ} (hadp : adapted 𝒢 f) (hint : ∀ i, integrable (f i) μ)

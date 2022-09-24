@@ -48,17 +48,17 @@ with respect to `f i`.
 
 Intuitively, the stopping time `τ` describes some stopping rule such that at time
 `i`, we may determine it with the information we have at time `i`. -/
-def is_stopping_time [preorder ι] (f : filtration ι m) (τ : Ω → ι) :=
+def is_stopping_time [preorder ι] (f : filtration ι Ω m) (τ : Ω → ι) :=
 ∀ i : ι, measurable_set[f i] $ {ω | τ ω ≤ i}
 
-lemma is_stopping_time_const [preorder ι] (f : filtration ι m) (i : ι) :
+lemma is_stopping_time_const [preorder ι] (f : filtration ι Ω m) (i : ι) :
   is_stopping_time f (λ ω, i) :=
 λ j, by simp only [measurable_set.const]
 
 section measurable_set
 
 section preorder
-variables [preorder ι] {f : filtration ι m} {τ : Ω → ι}
+variables [preorder ι] {f : filtration ι Ω m} {τ : Ω → ι}
 
 protected lemma is_stopping_time.measurable_set_le (hτ : is_stopping_time f τ) (i : ι) :
   measurable_set[f i] {ω | τ ω ≤ i} :=
@@ -85,7 +85,7 @@ section countable_stopping_time
 
 namespace is_stopping_time
 
-variables [partial_order ι] {τ : Ω → ι} {f : filtration ι m}
+variables [partial_order ι] {τ : Ω → ι} {f : filtration ι Ω m}
 
 protected lemma measurable_set_eq_of_countable_range
   (hτ : is_stopping_time f τ) (h_countable : (set.range τ).countable) (i : ι) :
@@ -131,7 +131,7 @@ protected lemma measurable_set_lt_of_countable [countable ι] (hτ : is_stopping
 hτ.measurable_set_lt_of_countable_range (set.to_countable _) i
 
 protected lemma measurable_set_ge_of_countable_range {ι} [linear_order ι] {τ : Ω → ι}
-  {f : filtration ι m}
+  {f : filtration ι Ω m}
   (hτ : is_stopping_time f τ) (h_countable : (set.range τ).countable) (i : ι) :
   measurable_set[f i] {ω | i ≤ τ ω} :=
 begin
@@ -141,8 +141,8 @@ begin
   exact (hτ.measurable_set_lt_of_countable_range h_countable i).compl,
 end
 
-protected lemma measurable_set_ge_of_countable {ι} [linear_order ι] {τ : Ω → ι} {f : filtration ι m}
-  [countable ι] (hτ : is_stopping_time f τ) (i : ι) :
+protected lemma measurable_set_ge_of_countable {ι} [linear_order ι] {τ : Ω → ι}
+  {f : filtration ι Ω m} [countable ι] (hτ : is_stopping_time f τ) (i : ι) :
   measurable_set[f i] {ω | i ≤ τ ω} :=
 hτ.measurable_set_ge_of_countable_range (set.to_countable _) i
 
@@ -151,7 +151,7 @@ end is_stopping_time
 end countable_stopping_time
 
 section linear_order
-variables [linear_order ι] {f : filtration ι m} {τ : Ω → ι}
+variables [linear_order ι] {f : filtration ι Ω m} {τ : Ω → ι}
 
 lemma is_stopping_time.measurable_set_gt (hτ : is_stopping_time f τ) (i : ι) :
   measurable_set[f i] {ω | i < τ ω} :=
@@ -243,7 +243,7 @@ end linear_order
 section countable
 
 lemma is_stopping_time_of_measurable_set_eq [preorder ι] [countable ι]
-  {f : filtration ι m} {τ : Ω → ι} (hτ : ∀ i, measurable_set[f i] {ω | τ ω = i}) :
+  {f : filtration ι Ω m} {τ : Ω → ι} (hτ : ∀ i, measurable_set[f i] {ω | τ ω = i}) :
   is_stopping_time f τ :=
 begin
   intro i,
@@ -258,7 +258,7 @@ end measurable_set
 
 namespace is_stopping_time
 
-protected lemma max [linear_order ι] {f : filtration ι m} {τ π : Ω → ι}
+protected lemma max [linear_order ι] {f : filtration ι Ω m} {τ π : Ω → ι}
   (hτ : is_stopping_time f τ) (hπ : is_stopping_time f π) :
   is_stopping_time f (λ ω, max (τ ω) (π ω)) :=
 begin
@@ -267,12 +267,12 @@ begin
   exact (hτ i).inter (hπ i),
 end
 
-protected lemma max_const [linear_order ι] {f : filtration ι m} {τ : Ω → ι}
+protected lemma max_const [linear_order ι] {f : filtration ι Ω m} {τ : Ω → ι}
   (hτ : is_stopping_time f τ) (i : ι) :
   is_stopping_time f (λ ω, max (τ ω) i) :=
 hτ.max (is_stopping_time_const f i)
 
-protected lemma min [linear_order ι] {f : filtration ι m} {τ π : Ω → ι}
+protected lemma min [linear_order ι] {f : filtration ι Ω m} {τ π : Ω → ι}
   (hτ : is_stopping_time f τ) (hπ : is_stopping_time f π) :
   is_stopping_time f (λ ω, min (τ ω) (π ω)) :=
 begin
@@ -281,14 +281,14 @@ begin
   exact (hτ i).union (hπ i),
 end
 
-protected lemma min_const [linear_order ι] {f : filtration ι m} {τ : Ω → ι}
+protected lemma min_const [linear_order ι] {f : filtration ι Ω m} {τ : Ω → ι}
   (hτ : is_stopping_time f τ) (i : ι) :
   is_stopping_time f (λ ω, min (τ ω) i) :=
 hτ.min (is_stopping_time_const f i)
 
 lemma add_const [add_group ι] [preorder ι] [covariant_class ι ι (function.swap (+)) (≤)]
   [covariant_class ι ι (+) (≤)]
-  {f : filtration ι m} {τ : Ω → ι} (hτ : is_stopping_time f τ) {i : ι} (hi : 0 ≤ i) :
+  {f : filtration ι Ω m} {τ : Ω → ι} (hτ : is_stopping_time f τ) {i : ι} (hi : 0 ≤ i) :
   is_stopping_time f (λ ω, τ ω + i) :=
 begin
   intro j,
@@ -297,7 +297,7 @@ begin
 end
 
 lemma add_const_nat
-  {f : filtration ℕ m} {τ : Ω → ℕ} (hτ : is_stopping_time f τ) {i : ℕ} :
+  {f : filtration ℕ Ω m} {τ : Ω → ℕ} (hτ : is_stopping_time f τ) {i : ℕ} :
   is_stopping_time f (λ ω, τ ω + i) :=
 begin
   refine is_stopping_time_of_measurable_set_eq (λ j, _),
@@ -314,7 +314,7 @@ end
 
 -- generalize to certain countable type?
 lemma add
-  {f : filtration ℕ m} {τ π : Ω → ℕ} (hτ : is_stopping_time f τ) (hπ : is_stopping_time f π) :
+  {f : filtration ℕ Ω m} {τ π : Ω → ℕ} (hτ : is_stopping_time f τ) (hπ : is_stopping_time f π) :
   is_stopping_time f (τ + π) :=
 begin
   intro i,
@@ -330,7 +330,7 @@ end
 
 section preorder
 
-variables [preorder ι] {f : filtration ι m} {τ π : Ω → ι}
+variables [preorder ι] {f : filtration ι Ω m} {τ π : Ω → ι}
 
 /-- The associated σ-algebra with a stopping time. -/
 protected def measurable_space (hτ : is_stopping_time f τ) : measurable_space Ω :=
@@ -404,7 +404,7 @@ begin
   all_goals { apply_instance, },
 end
 
-lemma measurable_space_le {ι} [semilattice_sup ι] {f : filtration ι m} {τ : Ω → ι}
+lemma measurable_space_le {ι} [semilattice_sup ι] {f : filtration ι Ω m} {τ : Ω → ι}
   [is_countably_generated (at_top : filter ι)] (hτ : is_stopping_time f τ) :
   hτ.measurable_space ≤ m :=
 begin
@@ -417,13 +417,13 @@ begin
   exact measurable_space_le' hτ,
 end
 
-example {f : filtration ℕ m} {τ : Ω → ℕ} (hτ : is_stopping_time f τ) : hτ.measurable_space ≤ m :=
+example {f : filtration ℕ Ω m} {τ : Ω → ℕ} (hτ : is_stopping_time f τ) : hτ.measurable_space ≤ m :=
 hτ.measurable_space_le
 
-example {f : filtration ℝ m} {τ : Ω → ℝ} (hτ : is_stopping_time f τ) : hτ.measurable_space ≤ m :=
+example {f : filtration ℝ Ω m} {τ : Ω → ℝ} (hτ : is_stopping_time f τ) : hτ.measurable_space ≤ m :=
 hτ.measurable_space_le
 
-@[simp] lemma measurable_space_const (f : filtration ι m) (i : ι) :
+@[simp] lemma measurable_space_const (f : filtration ι Ω m) (i : ι) :
   (is_stopping_time_const f i).measurable_space = f i :=
 begin
   ext1 s,
@@ -476,7 +476,7 @@ end preorder
 
 instance sigma_finite_stopping_time {ι} [semilattice_sup ι] [order_bot ι]
   [(filter.at_top : filter ι).is_countably_generated]
-  {μ : measure Ω} {f : filtration ι m} {τ : Ω → ι}
+  {μ : measure Ω} {f : filtration ι Ω m} {τ : Ω → ι}
   [sigma_finite_filtration μ f] (hτ : is_stopping_time f τ) :
   sigma_finite (μ.trim hτ.measurable_space_le) :=
 begin
@@ -487,7 +487,7 @@ begin
 end
 
 instance sigma_finite_stopping_time_of_le {ι} [semilattice_sup ι] [order_bot ι]
-  {μ : measure Ω} {f : filtration ι m} {τ : Ω → ι}
+  {μ : measure Ω} {f : filtration ι Ω m} {τ : Ω → ι}
   [sigma_finite_filtration μ f] (hτ : is_stopping_time f τ) {n : ι} (hτ_le : ∀ ω, τ ω ≤ n) :
   sigma_finite (μ.trim (hτ.measurable_space_le_of_le hτ_le)) :=
 begin
@@ -499,7 +499,7 @@ end
 
 section linear_order
 
-variables [linear_order ι] {f : filtration ι m} {τ π : Ω → ι}
+variables [linear_order ι] {f : filtration ι Ω m} {τ π : Ω → ι}
 
 protected lemma measurable_set_le' (hτ : is_stopping_time f τ) (i : ι) :
   measurable_set[hτ.measurable_space] {ω | τ ω ≤ i} :=
@@ -849,7 +849,7 @@ section prog_measurable
 variables [measurable_space ι] [topological_space ι] [order_topology ι]
   [second_countable_topology ι] [borel_space ι]
   [topological_space β]
-  {u : ι → Ω → β} {τ : Ω → ι} {f : filtration ι m}
+  {u : ι → Ω → β} {τ : Ω → ι} {f : filtration ι Ω m}
 
 lemma prog_measurable_min_stopping_time [metrizable_space ι] (hτ : is_stopping_time f τ) :
   prog_measurable f (λ i ω, min i (τ ω)) :=
@@ -959,7 +959,7 @@ lemma stopped_value_eq' [preorder ι] [locally_finite_order_bot ι] [add_comm_mo
   stopped_value u τ = ∑ i in finset.Iic N, set.indicator {ω | τ ω = i} (u i) :=
 stopped_value_eq_of_mem_finset (λ ω, finset.mem_Iic.mpr (hbdd ω))
 
-variables [partial_order ι] {ℱ : filtration ι m} [normed_add_comm_group E]
+variables [partial_order ι] {ℱ : filtration ι Ω m} [normed_add_comm_group E]
 
 lemma mem_ℒp_stopped_value_of_mem_finset (hτ : is_stopping_time ℱ τ) (hu : ∀ n, mem_ℒp (u n) p μ)
   {s : finset ι} (hbdd : ∀ ω, τ ω ∈ s)  :
@@ -1001,7 +1001,7 @@ section nat
 
 open filtration
 
-variables {f : filtration ℕ m} {u : ℕ → Ω → β} {τ π : Ω → ℕ}
+variables {f : filtration ℕ Ω m} {u : ℕ → Ω → β} {τ π : Ω → ℕ}
 
 lemma stopped_value_sub_eq_sum [add_comm_group β] (hle : τ ≤ π) :
   stopped_value u π - stopped_value u τ =
@@ -1116,7 +1116,7 @@ end nat
 
 section piecewise_const
 
-variables [preorder ι] {𝒢 : filtration ι m} {τ η : Ω → ι} {i j : ι} {s : set Ω}
+variables [preorder ι] {𝒢 : filtration ι Ω m} {τ η : Ω → ι} {i j : ι} {s : set Ω}
   [decidable_pred (∈ s)]
 
 /-- Given stopping times `τ` and `η` which are bounded below, `set.piecewise s τ η` is also

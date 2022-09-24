@@ -329,7 +329,7 @@ lemma upper_crossing_time_eq_of_bound_le (hab : a < b) (hn : N ≤ n) :
 le_antisymm upper_crossing_time_le
   ((le_trans (upper_crossing_time_bound_eq f N ω hab).symm.le (upper_crossing_time_mono hn)))
 
-variables {ℱ : filtration ℕ m0}
+variables {ℱ : filtration ℕ Ω m0}
 
 lemma adapted.is_stopping_time_crossing (hf : adapted ℱ f) :
   is_stopping_time ℱ (upper_crossing_time a b f N n) ∧

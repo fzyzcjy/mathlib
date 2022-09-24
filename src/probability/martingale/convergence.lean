@@ -46,7 +46,7 @@ open_locale nnreal ennreal measure_theory probability_theory big_operators topol
 
 namespace measure_theory
 
-variables {Ω ι : Type*} {m0 : measurable_space Ω} {μ : measure Ω} {ℱ : filtration ℕ m0}
+variables {Ω ι : Type*} {m0 : measurable_space Ω} {μ : measure Ω} {ℱ : filtration ℕ Ω m0}
 variables {a b : ℝ} {f : ℕ → Ω → ℝ} {ω : Ω} {R : ℝ≥0}
 
 section ae_convergence

@@ -37,11 +37,11 @@ open_locale classical measure_theory nnreal ennreal topological_space big_operat
 namespace measure_theory
 
 variables {Ω β ι : Type*} {m : measurable_space Ω} [topological_space β] [preorder ι]
-  {u v : ι → Ω → β} {f : filtration ι m}
+  {u v : ι → Ω → β} {f : filtration ι Ω m}
 
 /-- A sequence of functions `u` is adapted to a filtration `f` if for all `i`,
 `u i` is `f i`-measurable. -/
-def adapted (f : filtration ι m) (u : ι → Ω → β) : Prop :=
+def adapted (f : filtration ι Ω m) (u : ι → Ω → β) : Prop :=
 ∀ i : ι, strongly_measurable[f i] (u i)
 
 namespace adapted
@@ -74,11 +74,11 @@ lemma strongly_measurable_le {i j : ι} (hf : adapted f u) (hij : i ≤ j) :
 
 end adapted
 
-lemma adapted_const (f : filtration ι m) (x : β) : adapted f (λ _ _, x) :=
+lemma adapted_const (f : filtration ι Ω m) (x : β) : adapted f (λ _ _, x) :=
 λ i, strongly_measurable_const
 
 variable (β)
-lemma adapted_zero [has_zero β] (f : filtration ι m) : adapted f (0 : ι → Ω → β) :=
+lemma adapted_zero [has_zero β] (f : filtration ι Ω m) : adapted f (0 : ι → Ω → β) :=
 λ i, @strongly_measurable_zero Ω β (f i) _ _
 variable {β}
 
@@ -98,10 +98,10 @@ measurable with respect to a filtration `f` if at each point in time `i`, `u` re
 σ-algebra used for `Ω` is `f i`.
 The usual definition uses the interval `[0,i]`, which we replace by `set.Iic i`. We recover the
 usual definition for index types `ℝ≥0` or `ℕ`. -/
-def prog_measurable [measurable_space ι] (f : filtration ι m) (u : ι → Ω → β) : Prop :=
+def prog_measurable [measurable_space ι] (f : filtration ι Ω m) (u : ι → Ω → β) : Prop :=
 ∀ i, strongly_measurable[subtype.measurable_space.prod (f i)] (λ p : set.Iic i × Ω, u p.1 p.2)
 
-lemma prog_measurable_const [measurable_space ι] (f : filtration ι m) (b : β) :
+lemma prog_measurable_const [measurable_space ι] (f : filtration ι Ω m) (b : β) :
   prog_measurable f ((λ _ _, b) : ι → Ω → β) :=
 λ i, @strongly_measurable_const _ _ (subtype.measurable_space.prod (f i)) _ _
 
@@ -194,7 +194,7 @@ theorem adapted.prog_measurable_of_continuous
 /-- For filtrations indexed by `ℕ`, `adapted` and `prog_measurable` are equivalent. This lemma
 provides `adapted f u → prog_measurable f u`. See `prog_measurable.adapted` for the reverse
 direction, which is true more generally. -/
-lemma adapted.prog_measurable_of_nat {f : filtration ℕ m} {u : ℕ → Ω → β}
+lemma adapted.prog_measurable_of_nat {f : filtration ℕ Ω m} {u : ℕ → Ω → β}
   [add_comm_monoid β] [has_continuous_add β]
   (h : adapted f u) : prog_measurable f u :=
 begin
@@ -217,7 +217,7 @@ begin
 end
 
 -- this dot notation will make more sense once we have a more general definition for predictable
-lemma predictable.adapted {f : filtration ℕ m} {u : ℕ → Ω → β}
+lemma predictable.adapted {f : filtration ℕ Ω m} {u : ℕ → Ω → β}
   (hu : adapted f (λ n, u (n + 1))) (hu0 : strongly_measurable[f 0] (u 0)) :
   adapted f u :=
 λ n, match n with
