@@ -457,6 +457,11 @@ notation `∀ᵐ` binders `, ` r:(scoped P, filter.eventually P
 notation `∃ᵐ` binders `, ` r:(scoped P, filter.frequently P
   (measure_theory.measure.ae measure_theory.measure_space.volume)) := r
 
+/-- The tactic `exact measure_space.to_measurable_space`, to be used in optional (`auto_param`)
+arguments. -/
+meta def measure_space_tac : tactic unit :=
+`[exact measure_theory.measure_space.to_measurable_space]
+
 /-- The tactic `exact volume`, to be used in optional (`auto_param`) arguments. -/
 meta def volume_tac : tactic unit := `[exact measure_theory.measure_space.volume]
 
