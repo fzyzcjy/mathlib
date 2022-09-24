@@ -55,7 +55,8 @@ protected lemma mono {i j : ι} (f : filtration ι Ω m) (hij : i ≤ j) : f i �
 
 protected lemma le (f : filtration ι Ω m) (i : ι) : f i ≤ m := f.le' i
 
-@[ext] protected lemma ext {f g : filtration ι Ω m} (h : (f : ι → measurable_space Ω) = g) : f = g :=
+@[ext] protected lemma ext {f g : filtration ι Ω m} (h : (f : ι → measurable_space Ω) = g) :
+  f = g :=
 by { cases f, cases g, simp only, exact h, }
 
 variable (ι)
