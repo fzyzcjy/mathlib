@@ -1926,8 +1926,6 @@ lemma forall_mem_insert [decidable_eq α] (a : α) (s : finset α) (p : α → P
   (∀ x, x ∈ insert a s → p x) ↔ p a ∧ ∀ x, x ∈ s → p x :=
 by simp only [mem_insert, or_imp_distrib, forall_and_distrib, forall_eq]
 
-end finset
-
 /-- Equivalence between the set of natural numbers which are `≥ k` and `ℕ`, given by `n → n - k`. -/
 def not_mem_range_equiv (k : ℕ) : {n // n ∉ range k} ≃ ℕ :=
 { to_fun := λ i, i.1 - k,
@@ -1945,6 +1943,8 @@ def not_mem_range_equiv (k : ℕ) : {n // n ∉ range k} ≃ ℕ :=
 
 @[simp] lemma coe_not_mem_range_equiv_symm (k : ℕ) :
   ((not_mem_range_equiv k).symm : ℕ → {n // n ∉ range k}) = λ j, ⟨j + k, by simp⟩ := rfl
+
+end finset
 
 /-! ### dedup on list and multiset -/
 
