@@ -1132,6 +1132,9 @@ lemma tsum_to_nnreal_eq {f : α → ℝ≥0∞} (hf : ∀ a, f a ≠ ∞) :
 (congr_arg ennreal.to_nnreal (tsum_congr $ λ x, (coe_to_nnreal (hf x)).symm)).trans
   nnreal.tsum_eq_to_nnreal_tsum.symm
 
+lemma tsum_to_nnreal_coe_eq {f : α → ℝ≥0} : (∑' x, (f x : ℝ≥0∞)).to_nnreal = ∑' x, f x :=
+trans (tsum_to_nnreal_eq $ λ x, ennreal.coe_ne_top) (tsum_congr $ λ x, ennreal.to_nnreal_coe)
+
 lemma tsum_to_real_eq {f : α → ℝ≥0∞} (hf : ∀ a, f a ≠ ∞) :
   (∑' a, f a).to_real = ∑' a, (f a).to_real :=
 by simp only [ennreal.to_real, tsum_to_nnreal_eq hf, nnreal.coe_tsum]
