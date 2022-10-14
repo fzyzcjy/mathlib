@@ -76,11 +76,15 @@ by { rw [← con.mrange_mk', monoid_hom.mrange_eq_map, ← free_monoid.closure_r
 by rw [← mclosure_range_inl_union_inr, submonoid.closure_union, ← monoid_hom.coe_mrange,
   ← monoid_hom.coe_mrange, submonoid.closure_eq, submonoid.closure_eq]
 
+lemma hom_ext {f g : M ⋆ N →* P} (h₁ : f.comp inl = g.comp inl) (h₂ : f.comp inr = g.comp inr) :
+  f = g :=
+monoid_hom.eq_of_eq_on_mdense mclosure_range_inl_union_inr $ eq_on_union.2
+  ⟨eq_on_range.2 $ fun_like.ext'_iff.1 h₁, eq_on_range.2 $ fun_like.ext'_iff.1 h₂⟩
+
 def lift_equiv : (M ⋆ N →* P) ≃ (M →* P) × (N →* P) :=
 { to_fun := λ f, ⟨f.comp inl, f.comp inr⟩,
   inv_fun := λ fg, lift fg.1 fg.2,
-  left_inv := λ f, monoid_hom.eq_of_eq_on_mdense mclosure_range_inl_union_inr $ eq_on_union.2
-    ⟨eq_on_range.2 $ funext $ lift_apply_inl _ _, eq_on_range.2 $ funext $ lift_apply_inr _ _⟩,
+  left_inv := λ f, hom_ext (lift_comp_inl _ _) (lift_comp_inr _ _),
   right_inv := λ ⟨f, g⟩, prod.ext (lift_comp_inl _ _) (lift_comp_inr _ _) }
 
 def fst : M ⋆ N →* M := lift (monoid_hom.id M) 1
