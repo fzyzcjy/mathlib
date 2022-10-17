@@ -40,7 +40,7 @@ forall_congr (λ g, ⟨λ ⟨k, hk⟩, exists_imp_exists (by exact λ j, Exists.
   exists_imp_exists (λ k hk, by rw [←hk, pow_order_of_eq_one])⟩)
 
 lemma of_card [fintype G] {n : ℕ} (hG : card G = p ^ n) : is_p_group p G :=
-λ g, ⟨n, by rw [←hG, pow_card_eq_one]⟩
+λ g, ⟨n, by rw [←hG, ←nat.card_eq_fintype_card, pow_card_eq_one]⟩
 
 lemma of_bot : is_p_group p (⊥ : subgroup G) :=
 of_card (subgroup.card_bot.trans (pow_zero p).symm)

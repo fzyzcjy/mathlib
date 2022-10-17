@@ -106,7 +106,8 @@ begin
   haveI : fact (1 < n) := ⟨one_lt_two.trans hn⟩,
   haveI : ne_zero n := ne_zero.of_gt hn,
   suffices : 2 = order_of (-1 : (zmod n)ˣ),
-  { rw [← zmod.card_units_eq_totient, even_iff_two_dvd, this], exact order_of_dvd_card_univ },
+  { rw [←zmod.card_units_eq_totient, even_iff_two_dvd, this, ←nat.card_eq_fintype_card],
+    exact order_of_dvd_card_univ },
   rw [←order_of_units, units.coe_neg_one, order_of_neg_one, ring_char.eq (zmod n) n, if_neg hn.ne'],
 end
 

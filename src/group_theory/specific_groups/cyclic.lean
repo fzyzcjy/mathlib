@@ -221,7 +221,8 @@ calc (univ.filter (λ a : α, a ^ n = 1)).card
     from mem_powers_iff_mem_zpowers.2 $ hg x in
     set.mem_to_finset.2 ⟨(m / (fintype.card α / (nat.gcd n (fintype.card α))) : ℕ),
       have hgmn : g ^ (m * nat.gcd n (fintype.card α)) = 1,
-        by rw [pow_mul, hm, ← pow_gcd_card_eq_one_iff]; exact (mem_filter.1 hx).2,
+        by rw [pow_mul, hm, ←nat.card_eq_fintype_card, ←pow_gcd_card_eq_one_iff];
+        exact (mem_filter.1 hx).2,
       begin
         rw [zpow_coe_nat, ← pow_mul, nat.mul_div_cancel_left', hm],
         refine dvd_of_mul_dvd_mul_right (gcd_pos_of_pos_left (fintype.card α) hn0) _,
@@ -330,7 +331,7 @@ begin
     c = ∑ m in c.divisors, (univ.filter (λ a : α, order_of a = m)).card : by
   { simp only [←filter_dvd_eq_divisors hc0.ne', sum_card_order_of_eq_card_pow_eq_one hc0],
     apply congr_arg card,
-    simp }
+    simp [c, ←nat.card_eq_fintype_card] }
   ... = ∑ m in c.divisors.erase d, (univ.filter (λ a : α, order_of a = m)).card : by
   { rw eq_comm,
     refine (sum_subset (erase_subset _ _) (λ m hm₁ hm₂, _)),
@@ -512,7 +513,7 @@ open monoid
 begin
   obtain ⟨g, hg⟩ := is_cyclic.exists_generator α,
   apply nat.dvd_antisymm,
-  { rw [←lcm_order_eq_exponent, finset.lcm_dvd_iff],
+  { rw [←lcm_order_eq_exponent, finset.lcm_dvd_iff, ←nat.card_eq_fintype_card],
     exact λ b _, order_of_dvd_card_univ },
   rw ←order_of_eq_card_of_forall_mem_zpowers hg,
   exact order_dvd_exponent _
