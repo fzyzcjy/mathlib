@@ -615,19 +615,19 @@ begin
   simp [h]
 end
 
-variables [fintype G]
-
 /-- See also `order_eq_card_zpowers'`. -/
 @[to_additive add_order_eq_card_zmultiples "See also `add_order_eq_card_zmultiples'`."]
-lemma order_eq_card_zpowers : order_of x = fintype.card (zpowers x) :=
+lemma order_eq_card_zpowers [fintype G] : order_of x = fintype.card (zpowers x) :=
 (fintype.card_fin (order_of x)).symm.trans (fintype.card_eq.2 ⟨fin_equiv_zpowers x⟩)
 
 open quotient_group
 
-/- TODO: use cardinal theory, introduce `card : set G → ℕ`, or setup decidability for cosets -/
 @[to_additive add_order_of_dvd_card_univ]
-lemma order_of_dvd_card_univ : order_of x ∣ fintype.card G :=
+lemma order_of_dvd_card_univ : order_of x ∣ nat.card G :=
 begin
+  casesI fintype_or_infinite G with h h,
+  swap,
+  { simp only [card_eq_zero_of_infinite, dvd_zero] },
   classical,
   have ft_prod : fintype ((G ⧸ zpowers x) × zpowers x),
     from fintype.of_equiv G group_equiv_quotient_times_subgroup,
@@ -646,72 +646,71 @@ begin
     from calc order_of x = _ : order_eq_card_zpowers
       ... = _ : congr_arg (@fintype.card _) $ subsingleton.elim _ _,
   exact dvd.intro (@fintype.card (G ⧸ subgroup.zpowers x) ft_cosets)
-          (by rw [eq₁, eq₂, mul_comm])
+          (by rw [nat.card_eq_fintype_card, eq₁, eq₂, mul_comm]),
 end
 
 @[simp, to_additive card_nsmul_eq_zero]
-lemma pow_card_eq_one : x ^ fintype.card G = 1 :=
-let ⟨m, hm⟩ := @order_of_dvd_card_univ _ x _ _ in
+lemma pow_card_eq_one : x ^ nat.card G = 1 :=
+let ⟨m, hm⟩ := @order_of_dvd_card_univ _ x _ in
 by simp [hm, pow_mul, pow_order_of_eq_one]
 
 @[to_additive] lemma subgroup.pow_index_mem {G : Type*} [group G] (H : subgroup G)
-  [finite (G ⧸ H)] [normal H] (g : G) : g ^ index H ∈ H :=
-by { casesI nonempty_fintype (G ⧸ H),
-  rw [←eq_one_iff, quotient_group.coe_pow H, index_eq_card, pow_card_eq_one] }
+  [normal H] (g : G) : g ^ index H ∈ H :=
+by { rw [←eq_one_iff, quotient_group.coe_pow H, index, pow_card_eq_one] }
 
 @[to_additive] lemma pow_eq_mod_card (n : ℕ) :
-  x ^ n = x ^ (n % fintype.card G) :=
+  x ^ n = x ^ (n % nat.card G) :=
 by rw [pow_eq_mod_order_of, ←nat.mod_mod_of_dvd n order_of_dvd_card_univ,
   ← pow_eq_mod_order_of]
 
 @[to_additive] lemma zpow_eq_mod_card (n : ℤ) :
-  x ^ n = x ^ (n % fintype.card G) :=
+  x ^ n = x ^ (n % nat.card G) :=
 by rw [zpow_eq_mod_order_of, ← int.mod_mod_of_dvd n (int.coe_nat_dvd.2 order_of_dvd_card_univ),
   ← zpow_eq_mod_order_of]
 
 /-- If `gcd(|G|,n)=1` then the `n`th power map is a bijection -/
 @[to_additive "If `gcd(|G|,n)=1` then the smul by `n` is a bijection", simps]
-  def pow_coprime (h : nat.coprime (fintype.card G) n) : G ≃ G :=
+noncomputable def pow_coprime (h : nat.coprime (nat.card G) n) : G ≃ G :=
 { to_fun := λ g, g ^ n,
-  inv_fun := λ g, g ^ (nat.gcd_b (fintype.card G) n),
+  inv_fun := λ g, g ^ (nat.gcd_b (nat.card G) n),
   left_inv := λ g, by
-  { have key : g ^ _ = g ^ _ := congr_arg (λ n : ℤ, g ^ n) (nat.gcd_eq_gcd_ab (fintype.card G) n),
+  { have key : g ^ _ = g ^ _ := congr_arg (λ n : ℤ, g ^ n) (nat.gcd_eq_gcd_ab (nat.card G) n),
     rwa [zpow_add, zpow_mul, zpow_mul, zpow_coe_nat, zpow_coe_nat, zpow_coe_nat,
       h.gcd_eq_one, pow_one, pow_card_eq_one, one_zpow, one_mul, eq_comm] at key },
   right_inv := λ g, by
-  { have key : g ^ _ = g ^ _ := congr_arg (λ n : ℤ, g ^ n) (nat.gcd_eq_gcd_ab (fintype.card G) n),
+  { have key : g ^ _ = g ^ _ := congr_arg (λ n : ℤ, g ^ n) (nat.gcd_eq_gcd_ab (nat.card G) n),
     rwa [zpow_add, zpow_mul, zpow_mul', zpow_coe_nat, zpow_coe_nat, zpow_coe_nat,
       h.gcd_eq_one, pow_one, pow_card_eq_one, one_zpow, one_mul, eq_comm] at key } }
 
-@[simp, to_additive] lemma pow_coprime_one (h : nat.coprime (fintype.card G) n) :
+@[simp, to_additive] lemma pow_coprime_one (h : nat.coprime (nat.card G) n) :
   pow_coprime h 1 = 1 := one_pow n
 
-@[simp, to_additive] lemma pow_coprime_inv (h : nat.coprime (fintype.card G) n) {g : G} :
+@[simp, to_additive] lemma pow_coprime_inv (h : nat.coprime (nat.card G) n) {g : G} :
   pow_coprime h g⁻¹ = (pow_coprime h g)⁻¹ := inv_pow g n
 
 @[to_additive add_inf_eq_bot_of_coprime]
-lemma inf_eq_bot_of_coprime {G : Type*} [group G] {H K : subgroup G} [fintype H] [fintype K]
-  (h : nat.coprime (fintype.card H) (fintype.card K)) : H ⊓ K = ⊥ :=
+lemma inf_eq_bot_of_coprime {G : Type*} [group G] {H K : subgroup G}
+  (h : nat.coprime (nat.card H) (nat.card K)) : H ⊓ K = ⊥ :=
 begin
   refine (H ⊓ K).eq_bot_iff_forall.mpr (λ x hx, _),
   rw [←order_of_eq_one_iff, ←nat.dvd_one, ←h.gcd_eq_one, nat.dvd_gcd_iff],
-  exact ⟨(congr_arg (∣ fintype.card H) (order_of_subgroup ⟨x, hx.1⟩)).mpr order_of_dvd_card_univ,
-    (congr_arg (∣ fintype.card K) (order_of_subgroup ⟨x, hx.2⟩)).mpr order_of_dvd_card_univ⟩,
+  exact ⟨(congr_arg (∣ nat.card H) (order_of_subgroup ⟨x, hx.1⟩)).mpr order_of_dvd_card_univ,
+    (congr_arg (∣ nat.card K) (order_of_subgroup ⟨x, hx.2⟩)).mpr order_of_dvd_card_univ⟩,
 end
 
 variable (a)
 
 /-- TODO: Generalise to `submonoid.powers`.-/
 @[to_additive image_range_add_order_of, nolint to_additive_doc]
-lemma image_range_order_of [decidable_eq G] :
+lemma image_range_order_of [decidable_eq G] [fintype G] :
   finset.image (λ i, x ^ i) (finset.range (order_of x)) = (zpowers x : set G).to_finset :=
 by { ext x, rw [set.mem_to_finset, set_like.mem_coe, mem_zpowers_iff_mem_range_order_of] }
 
 /-- TODO: Generalise to `finite` + `cancel_monoid`. -/
 @[to_additive gcd_nsmul_card_eq_zero_iff "TODO: Generalise to `finite` + `cancel_add_monoid`"]
-lemma pow_gcd_card_eq_one_iff : x ^ n = 1 ↔ x ^ (gcd n (fintype.card G)) = 1 :=
+lemma pow_gcd_card_eq_one_iff : x ^ n = 1 ↔ x ^ (gcd n (nat.card G)) = 1 :=
 ⟨λ h, pow_gcd_eq_one _ h $ pow_card_eq_one,
-  λ h, let ⟨m, hm⟩ := gcd_dvd_left n (fintype.card G) in
+  λ h, let ⟨m, hm⟩ := gcd_dvd_left n (nat.card G) in
     by rw [hm, pow_mul, h, one_pow]⟩
 
 end finite_group
@@ -749,7 +748,7 @@ def pow_card_subgroup {G : Type*} [group G] [fintype G] (S : set G) (hS : S.none
   subgroup G :=
 have one_mem : (1 : G) ∈ (S ^ fintype.card G) := by
 { obtain ⟨a, ha⟩ := hS,
-  rw ← pow_card_eq_one,
+  rw [←pow_card_eq_one, nat.card_eq_fintype_card],
   exact set.pow_mem_pow ha (fintype.card G) },
 subgroup_of_idempotent (S ^ (fintype.card G)) ⟨1, one_mem⟩ begin
   classical!,

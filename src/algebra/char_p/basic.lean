@@ -40,7 +40,7 @@ theorem char_p.cast_eq_zero [add_monoid_with_one R] (p : ℕ) [char_p R p] :
 
 @[simp] lemma char_p.cast_card_eq_zero [add_group_with_one R] [fintype R] :
   (fintype.card R : R) = 0 :=
-by rw [← nsmul_one, card_nsmul_eq_zero]
+by rw [←nat.card_eq_fintype_card, ←nsmul_one, card_nsmul_eq_zero]
 
 lemma char_p.add_order_of_one (R) [semiring R] : char_p R (add_order_of (1 : R)) :=
 ⟨λ n, by rw [← nat.smul_one_eq_coe, add_order_of_dvd_iff_nsmul_eq_zero]⟩
