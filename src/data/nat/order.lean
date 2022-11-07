@@ -41,15 +41,15 @@ instance : linear_ordered_comm_semiring ℕ :=
 { lt                         := nat.lt,
   add_le_add_left            := @nat.add_le_add_left,
   le_of_add_le_add_left      := @nat.le_of_add_le_add_left,
-  zero_le_one                := nat.le_of_lt (nat.zero_lt_succ 0),
+  zero_lt_one                := nat.zero_lt_succ 0,
   mul_lt_mul_of_pos_left     := @nat.mul_lt_mul_of_pos_left,
   mul_lt_mul_of_pos_right    := @nat.mul_lt_mul_of_pos_right,
   decidable_eq               := nat.decidable_eq,
-  exists_pair_ne             := ⟨0, 1, ne_of_lt nat.zero_lt_one⟩,
   ..nat.comm_semiring, ..nat.linear_order }
 
 instance : linear_ordered_comm_monoid_with_zero ℕ :=
-{ mul_le_mul_left := λ a b h c, nat.mul_le_mul_left c h,
+{ zero_le_one                := (nat.zero_lt_succ 0).le,
+  mul_le_mul_left := λ a b h c, nat.mul_le_mul_left c h,
   ..nat.linear_ordered_comm_semiring,
   ..(infer_instance : comm_monoid_with_zero ℕ)}
 

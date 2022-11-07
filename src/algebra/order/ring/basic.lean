@@ -3,9 +3,10 @@ Copyright (c) 2016 Jeremy Avigad. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jeremy Avigad, Leonardo de Moura, Mario Carneiro, Yaël Dillies
 -/
-import order.min_max
+import algebra.char_zero.defs
 import algebra.order.group.basic
 import algebra.order.ring.lemmas
+import order.min_max
 
 /-!
 # Ordered rings and semirings
@@ -535,9 +536,6 @@ lemma strict_mono.mul (hf : strict_mono f) (hg : strict_mono g) (hf₀ : ∀ x, 
 
 end monotone
 
-section nontrivial
-variables [nontrivial α]
-
 lemma lt_one_add (a : α) : a < 1 + a := lt_add_of_pos_left _ zero_lt_one
 lemma lt_add_one (a : α) : a < a + 1 := lt_add_of_pos_right _ zero_lt_one
 
@@ -556,7 +554,7 @@ order_embedding.of_strict_mono coe nat.strict_mono_cast
 instance strict_ordered_semiring.to_no_max_order : no_max_order α :=
 ⟨λ a, ⟨a + 1, lt_add_of_pos_right _ one_pos⟩⟩
 
-end nontrivial
+lemma strict_ordered_semiring.to_char_zero : char_zero α := ⟨nat.strict_mono_cast.injective⟩
 
 end strict_ordered_semiring
 
@@ -1047,8 +1045,8 @@ protected def ordered_comm_ring [ordered_comm_ring α] [has_zero β] [has_one β
 
 /-- Pullback a `strict_ordered_semiring` under an injective map. -/
 @[reducible] -- See note [reducible non-instances]
-protected def strict_ordered_semiring [strict_ordered_semiring α] [nontrivial β] [has_zero β]
-  [has_one β] [has_add β] [has_mul β] [has_pow β ℕ] [has_smul ℕ β] [has_nat_cast β] (f : β → α)
+protected def strict_ordered_semiring [strict_ordered_semiring α] [has_zero β] [has_one β]
+  [has_add β] [has_mul β] [has_pow β ℕ] [has_smul ℕ β] [has_nat_cast β] (f : β → α)
   (hf : injective f) (zero : f 0 = 0) (one : f 1 = 1) (add : ∀ x y, f (x + y) = f x + f y)
   (mul : ∀ x y, f (x * y) = f x * f y) (nsmul : ∀ x (n : ℕ), f (n • x) = n • f x)
   (npow : ∀ x (n : ℕ), f (x ^ n) = f x ^ n) (nat_cast : ∀ n : ℕ, f n = n) :

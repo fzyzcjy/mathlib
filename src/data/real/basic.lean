@@ -246,7 +246,7 @@ instance : strict_ordered_comm_ring ℝ :=
     { simp },
     { exact λ c, or.inr ((add_lt_add_iff_left c).2 ‹_›) }
   end,
-  zero_le_one := le_of_lt real.zero_lt_one,
+  zero_lt_one := real.zero_lt_one,
   mul_pos     := @real.mul_pos,
   .. real.comm_ring, .. real.partial_order, .. real.semiring }
 

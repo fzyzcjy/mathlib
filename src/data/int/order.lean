@@ -5,7 +5,6 @@ Authors: Jeremy Avigad
 -/
 import data.int.basic
 import algebra.order.ring.abs
-import algebra.order.ring.nontrivial
 import algebra.char_zero.defs
 
 /-!
@@ -32,7 +31,7 @@ namespace int
 instance : linear_ordered_comm_ring ℤ :=
 { add_le_add_left := @int.add_le_add_left,
   mul_pos         := @int.mul_pos,
-  zero_le_one     := le_of_lt int.zero_lt_one,
+  zero_lt_one     := int.zero_lt_one,
   .. int.comm_ring, .. int.linear_order, .. int.nontrivial }
 
 /-! ### Extra instances to short-circuit type class resolution

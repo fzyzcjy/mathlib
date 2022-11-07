@@ -333,7 +333,7 @@ instance : ordered_cancel_add_comm_monoid num :=
 
 instance : linear_ordered_semiring num :=
 { le_total                   := by {intros a b, transfer_rw, apply le_total},
-  zero_le_one                := dec_trivial,
+  zero_lt_one                := dec_trivial,
   mul_lt_mul_of_pos_left     := by {intros a b c, transfer_rw, apply mul_lt_mul_of_pos_left},
   mul_lt_mul_of_pos_right    := by {intros a b c, transfer_rw, apply mul_lt_mul_of_pos_right},
   decidable_lt               := num.decidable_lt,

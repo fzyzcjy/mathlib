@@ -65,7 +65,7 @@ begin
 end
 
 instance : linear_ordered_comm_ring ℤ[ε] :=
-{ zero_le_one := or.inr ⟨0, by simp⟩,
+{ zero_lt_one := or.inr ⟨0, by simp⟩,
   mul_pos := λ p q, by { simp_rw [pos_iff, trailing_coeff_mul], exact mul_pos },
   ..int_with_epsilon.linear_order, ..int_with_epsilon.comm_ring,
   ..int_with_epsilon.ordered_add_comm_group, ..int_with_epsilon.nontrivial }
