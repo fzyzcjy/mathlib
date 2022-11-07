@@ -135,7 +135,7 @@ class ordered_comm_semiring (α : Type u) extends ordered_semiring α, comm_semi
 multiplication by a nonnegative number is monotone. -/
 @[protect_proj]
 class ordered_ring (α : Type u) extends ring α, ordered_add_comm_group α :=
-(zero_le_one : 0 ≤ (1 : α))
+(zero_le_one : (0 : α) ≤ 1)
 (mul_nonneg : ∀ a b : α, 0 ≤ a → 0 ≤ b → 0 ≤ a * b)
 
 /-- An `ordered_comm_ring` is a commutative ring with a partial order such that addition is monotone
@@ -147,8 +147,8 @@ class ordered_comm_ring (α : Type u) extends ordered_ring α, comm_ring α
 strictly monotone and multiplication by a positive number is strictly monotone. -/
 @[protect_proj]
 class strict_ordered_semiring (α : Type u)
-  extends semiring α, ordered_cancel_add_comm_monoid α, nontrivial α :=
-(zero_le_one : (0 : α) ≤ 1)
+  extends semiring α, ordered_cancel_add_comm_monoid α :=
+(zero_lt_one : (0 : α) < 1)
 (mul_lt_mul_of_pos_left  : ∀ a b c : α, a < b → 0 < c → c * a < c * b)
 (mul_lt_mul_of_pos_right : ∀ a b c : α, a < b → 0 < c → a * c < b * c)
 
@@ -160,8 +160,8 @@ class strict_ordered_comm_semiring (α : Type u) extends strict_ordered_semiring
 /-- A `strict_ordered_ring` is a ring with a partial order such that addition is strictly monotone
 and multiplication by a positive number is strictly monotone. -/
 @[protect_proj]
-class strict_ordered_ring (α : Type u) extends ring α, ordered_add_comm_group α, nontrivial α :=
-(zero_le_one : 0 ≤ (1 : α))
+class strict_ordered_ring (α : Type u) extends ring α, ordered_add_comm_group α :=
+(zero_lt_one : (0 : α) < 1)
 (mul_pos     : ∀ a b : α, 0 < a → 0 < b → 0 < a * b)
 
 /-- A `strict_ordered_comm_ring` is a commutative ring with a partial order such that addition is
@@ -199,7 +199,7 @@ section ordered_semiring
 variables [ordered_semiring α] {a b c d : α}
 
 @[priority 100] -- see Note [lower instance priority]
-instance ordered_semiring.zero_le_one_class : zero_le_one_class α :=
+instance ordered_semiring.to_zero_le_one_class : zero_le_one_class α :=
 { ..‹ordered_semiring α› }
 
 @[priority 200] -- see Note [lower instance priority]
@@ -417,11 +417,16 @@ instance strict_ordered_semiring.to_pos_mul_strict_mono : pos_mul_strict_mono α
 instance strict_ordered_semiring.to_mul_pos_strict_mono : mul_pos_strict_mono α :=
 ⟨λ x a b h, strict_ordered_semiring.mul_lt_mul_of_pos_right _ _ _ h x.prop⟩
 
+@[priority 100] -- see Note [lower instance priority]
+instance strict_ordered_semiring.to_nontrivial : nontrivial α :=
+⟨⟨0, 1, strict_ordered_semiring.zero_lt_one.ne⟩⟩
+
 /-- A choice-free version of `strict_ordered_semiring.to_ordered_semiring` to avoid using choice in
 basic `nat` lemmas. -/
 @[reducible] -- See note [reducible non-instances]
 def strict_ordered_semiring.to_ordered_semiring' [@decidable_rel α (≤)] : ordered_semiring α :=
-{ mul_le_mul_of_nonneg_left := λ a b c hab hc, begin
+{ zero_le_one := strict_ordered_semiring.zero_lt_one.le,
+  mul_le_mul_of_nonneg_left := λ a b c hab hc, begin
     obtain rfl | hab := decidable.eq_or_lt_of_le hab,
     { refl },
     obtain rfl | hc := decidable.eq_or_lt_of_le hc,
@@ -439,7 +444,8 @@ def strict_ordered_semiring.to_ordered_semiring' [@decidable_rel α (≤)] : ord
 
 @[priority 100] -- see Note [lower instance priority]
 instance strict_ordered_semiring.to_ordered_semiring : ordered_semiring α :=
-{ mul_le_mul_of_nonneg_left := λ _ _ _, begin
+{ zero_le_one := strict_ordered_semiring.zero_lt_one.le,
+  mul_le_mul_of_nonneg_left := λ _ _ _, begin
     letI := @strict_ordered_semiring.to_ordered_semiring' α _ (classical.dec_rel _),
     exact mul_le_mul_of_nonneg_left,
   end,
@@ -575,30 +581,31 @@ variables [strict_ordered_ring α] {a b c : α}
 
 @[priority 100] -- see Note [lower instance priority]
 instance strict_ordered_ring.to_strict_ordered_semiring : strict_ordered_semiring α :=
-{ le_of_add_le_add_left := @le_of_add_le_add_left α _ _ _,
-  mul_lt_mul_of_pos_left := λ a b c h hc,
+{ mul_lt_mul_of_pos_left := λ a b c h hc,
     by simpa only [mul_sub, sub_pos] using strict_ordered_ring.mul_pos _ _ hc (sub_pos.2 h),
   mul_lt_mul_of_pos_right := λ a b c h hc,
     by simpa only [sub_mul, sub_pos] using strict_ordered_ring.mul_pos _ _ (sub_pos.2 h) hc,
-  ..‹strict_ordered_ring α›,  ..ring.to_semiring }
+  ..‹strict_ordered_ring α›,  ..ring.to_semiring,
+  ..ordered_add_comm_group.to_ordered_cancel_add_comm_monoid α }
 
 /-- A choice-free version of `strict_ordered_ring.to_ordered_ring` to avoid using choice in basic
 `int` lemmas. -/
 @[reducible] -- See note [reducible non-instances]
 def strict_ordered_ring.to_ordered_ring' [@decidable_rel α (≤)] : ordered_ring α :=
-{ mul_nonneg := λ a b ha hb, begin
-    cases decidable.eq_or_lt_of_le ha with ha ha,
+{ zero_le_one := strict_ordered_ring.zero_lt_one.le,
+  mul_nonneg := λ a b ha hb, begin
+    obtain ha | ha := decidable.eq_or_lt_of_le ha,
     { rw [←ha, zero_mul] },
-    cases decidable.eq_or_lt_of_le hb with hb hb,
+    obtain hb | hb := decidable.eq_or_lt_of_le hb,
     { rw [←hb, mul_zero] },
-    { exact (mul_pos ha hb).le }
+    { exact (strict_ordered_ring.mul_pos _ _ ha hb).le }
   end,
   ..‹strict_ordered_ring α›,  ..ring.to_semiring }
 
-
 @[priority 100] -- see Note [lower instance priority]
 instance strict_ordered_ring.to_ordered_ring : ordered_ring α :=
-{ mul_nonneg := λ a b, begin
+{ zero_le_one := strict_ordered_ring.zero_lt_one.le,
+  mul_nonneg := λ a b, begin
     letI := @strict_ordered_ring.to_ordered_ring' α _ (classical.dec_rel _),
     exact mul_nonneg,
   end,
@@ -842,7 +849,7 @@ instance linear_ordered_ring.is_domain : is_domain α :=
       exacts [(mul_pos_of_neg_of_neg ha hb).ne.symm, (mul_neg_of_neg_of_pos ha hb).ne,
         (mul_neg_of_pos_of_neg ha hb).ne, (mul_pos ha hb).ne.symm]
     end,
-  .. ‹linear_ordered_ring α› }
+  ..‹linear_ordered_ring α›, ..strict_ordered_semiring.to_nontrivial }
 
 lemma mul_pos_iff : 0 < a * b ↔ 0 < a ∧ 0 < b ∨ a < 0 ∧ b < 0 :=
 ⟨pos_and_pos_or_neg_and_neg_of_mul_pos,
@@ -1046,13 +1053,13 @@ protected def strict_ordered_semiring [strict_ordered_semiring α] [nontrivial �
   (mul : ∀ x y, f (x * y) = f x * f y) (nsmul : ∀ x (n : ℕ), f (n • x) = n • f x)
   (npow : ∀ x (n : ℕ), f (x ^ n) = f x ^ n) (nat_cast : ∀ n : ℕ, f n = n) :
   strict_ordered_semiring β :=
-{ mul_lt_mul_of_pos_left := λ a b c h hc, show f (c * a) < f (c * b),
+{ zero_lt_one := show f 0 < f 1, by simp only [zero, one, zero_lt_one],
+  mul_lt_mul_of_pos_left := λ a b c h hc, show f (c * a) < f (c * b),
     by simpa only [mul, zero] using mul_lt_mul_of_pos_left ‹f a < f b› (by rwa ←zero),
   mul_lt_mul_of_pos_right := λ a b c h hc, show f (a * c) < f (b * c),
     by simpa only [mul, zero] using mul_lt_mul_of_pos_right ‹f a < f b› (by rwa ←zero),
   ..hf.ordered_cancel_add_comm_monoid f zero add nsmul,
-  ..hf.ordered_semiring f zero one add mul nsmul npow nat_cast,
-  ..‹nontrivial β› }
+  ..hf.ordered_semiring f zero one add mul nsmul npow nat_cast, }
 
 /-- Pullback a `strict_ordered_comm_semiring` under an injective map. -/
 @[reducible] -- See note [reducible non-instances]
@@ -1165,7 +1172,7 @@ namespace ring
 which contains `1` and such that the positive elements are closed under multiplication. -/
 @[nolint has_nonempty_instance]
 structure positive_cone (α : Type*) [ring α] extends add_comm_group.positive_cone α :=
-(one_nonneg : nonneg 1)
+(one_pos : pos 1)
 (mul_pos : ∀ (a b), pos a → pos b → pos (a * b))
 
 /-- Forget that a positive cone in a ring respects the multiplicative structure. -/
@@ -1174,8 +1181,7 @@ add_decl_doc positive_cone.to_positive_cone
 /-- A positive cone in a ring induces a linear order if `1` is a positive element. -/
 @[nolint has_nonempty_instance]
 structure total_positive_cone (α : Type*) [ring α]
-  extends positive_cone α, add_comm_group.total_positive_cone α :=
-(one_pos : pos 1)
+  extends positive_cone α, add_comm_group.total_positive_cone α
 
 /-- Forget that a `total_positive_cone` in a ring is total. -/
 add_decl_doc total_positive_cone.to_positive_cone
@@ -1191,13 +1197,7 @@ open ring
 
 /-- Construct a `strict_ordered_ring` by designating a positive cone in an existing `ring`. -/
 def mk_of_positive_cone {α : Type*} [ring α] (C : positive_cone α) : strict_ordered_ring α :=
-{ exists_pair_ne := ⟨0, 1, begin
-    intro h,
-    have one_pos := C.one_pos,
-    rw [←h, C.pos_iff] at one_pos,
-    simpa using one_pos,
-  end⟩,
-  zero_le_one := by { change C.nonneg (1 - 0), convert C.one_nonneg, simp, },
+{ zero_lt_one := by { change C.pos (1 - 0), convert C.one_pos, simp, },
   mul_pos := λ x y xp yp, begin
     change C.pos (x*y - 0),
     convert C.mul_pos x y (by { convert xp, simp, }) (by { convert yp, simp, }),
