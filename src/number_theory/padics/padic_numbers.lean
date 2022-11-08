@@ -1026,8 +1026,7 @@ begin
   by_cases hx : x = 0,
   { simp only [hx, norm_zero, valuation_zero, zero_le_one, le_refl], },
   { rw [norm_eq_pow_val hx, ← zpow_zero (p : ℝ), zpow_le_iff_le
-      (nat.one_lt_cast.mpr (nat.prime.one_lt' p).1), right.neg_nonpos_iff],
-    apply_instance, }
+      ((@nat.one_lt_cast ℝ _ _ _).mpr (nat.prime.one_lt' p).1), right.neg_nonpos_iff], }
 end
 
 end norm_le_iff

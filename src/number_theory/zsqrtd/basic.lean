@@ -709,7 +709,7 @@ or.elim (eq_zero_or_eq_zero_of_mul_eq_zero
 instance : linear_ordered_comm_ring ℤ√d :=
 { add_le_add_left := @zsqrtd.add_le_add_left,
   mul_pos         := @zsqrtd.mul_pos,
-  zero_le_one     := dec_trivial,
+  zero_lt_one     := dec_trivial,
   .. zsqrtd.comm_ring, .. zsqrtd.linear_order, .. zsqrtd.nontrivial }
 
 instance : linear_ordered_ring ℤ√d := by apply_instance

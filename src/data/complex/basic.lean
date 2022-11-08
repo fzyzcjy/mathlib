@@ -651,7 +651,7 @@ by { ext, refl, simp only [←(complex.le_def.1 hz).2, complex.zero_im, complex.
 With `z ≤ w` iff `w - z` is real and nonnegative, `ℂ` is a strictly ordered ring.
 -/
 protected def strict_ordered_comm_ring : strict_ordered_comm_ring ℂ :=
-{ zero_le_one := ⟨zero_le_one, rfl⟩,
+{ zero_lt_one := ⟨zero_lt_one, rfl⟩,
   add_le_add_left := λ w z h y, ⟨add_le_add_left h.1 _, congr_arg2 (+) rfl h.2⟩,
   mul_pos := λ z w hz hw,
     by simp [lt_def, mul_re, mul_im, ← hz.2, ← hw.2, mul_pos hz.1 hw.1],
