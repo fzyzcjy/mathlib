@@ -347,7 +347,7 @@ noncomputable instance : linear_ordered_field ℝ :=
   rat_cast_mk  := λ n d hd h2,
     by rw [←of_cauchy_rat_cast, rat.cast_mk', of_cauchy_mul, of_cauchy_inv, of_cauchy_nat_cast,
            of_cauchy_int_cast],
-  ..real.linear_ordered_comm_ring }
+  ..real.linear_ordered_comm_ring, ..real.nontrivial }
 
 /- Extra instances to short-circuit type class resolution -/
 

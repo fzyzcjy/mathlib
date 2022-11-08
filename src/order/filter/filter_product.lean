@@ -47,7 +47,7 @@ by simp only [lt_iff_le_not_le, eventually_and, coe_le, eventually_not, eventual
 
 lemma coe_pos [preorder β] [has_zero β] {f : α → β} : 0 < (f : β*) ↔ ∀* x, 0 < f x := coe_lt
 
-lemma const_lt [preorder β] {x y : β} : x ≤ y → (↑x : β*) ≤ ↑y := lift_rel_const
+lemma const_lt [preorder β] {x y : β} : x < y → (↑x : β*) < ↑y := coe_lt.mpr ∘ lift_rel_const
 
 lemma const_lt_iff [preorder β] {x y : β} : (↑x : β*) < ↑y ↔ x < y :=
 coe_lt.trans lift_rel_const_iff
@@ -134,7 +134,8 @@ instance [ordered_comm_ring β] : ordered_comm_ring β* :=
 { ..germ.ordered_ring, ..germ.ordered_comm_semiring }
 
 instance [strict_ordered_semiring β] : strict_ordered_semiring β* :=
-{ mul_lt_mul_of_pos_left := λ x y z, induction_on₃ x y z $ λ f g h hfg hh, coe_lt.2 $
+{ zero_lt_one := const_lt zero_lt_one,
+  mul_lt_mul_of_pos_left := λ x y z, induction_on₃ x y z $ λ f g h hfg hh, coe_lt.2 $
    (coe_lt.1 hh).mp $ (coe_lt.1 hfg).mono $ λ a, mul_lt_mul_of_pos_left,
   mul_lt_mul_of_pos_right := λ x y z, induction_on₃ x y z $ λ f g h hfg hh, coe_lt.2 $
    (coe_lt.1 hh).mp $ (coe_lt.1 hfg).mono $ λ a, mul_lt_mul_of_pos_right,
@@ -144,7 +145,7 @@ instance [strict_ordered_comm_semiring β] : strict_ordered_comm_semiring β* :=
 { .. germ.strict_ordered_semiring, ..germ.ordered_comm_semiring }
 
 instance [strict_ordered_ring β] : strict_ordered_ring β* :=
-{ zero_le_one := const_le zero_le_one,
+{ zero_lt_one := const_lt zero_lt_one,
   mul_pos := λ x y, induction_on₂ x y $ λ f g hf hg, coe_pos.2 $
     (coe_pos.1 hg).mp $ (coe_pos.1 hf).mono $ λ x, mul_pos,
   .. germ.ring, .. germ.ordered_add_comm_group, .. germ.nontrivial }
