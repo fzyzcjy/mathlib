@@ -52,7 +52,8 @@ instance linear_ordered_field.to_linear_ordered_semifield [linear_ordered_field 
 instance canonically_linear_ordered_semifield.to_linear_ordered_comm_group_with_zero
   [canonically_linear_ordered_semifield α] : linear_ordered_comm_group_with_zero α :=
 { mul_le_mul_left := λ a b h c, mul_le_mul_of_nonneg_left h $ zero_le _,
-  ..‹canonically_linear_ordered_semifield α› }
+  ..‹canonically_linear_ordered_semifield α›,
+  ..strict_ordered_semiring.to_ordered_semiring }
 
 @[priority 100] -- See note [lower instance priority]
 instance canonically_linear_ordered_semifield.to_canonically_linear_ordered_add_monoid
