@@ -554,7 +554,7 @@ order_embedding.of_strict_mono coe nat.strict_mono_cast
 instance strict_ordered_semiring.to_no_max_order : no_max_order α :=
 ⟨λ a, ⟨a + 1, lt_add_of_pos_right _ one_pos⟩⟩
 
-lemma strict_ordered_semiring.to_char_zero : char_zero α := ⟨nat.strict_mono_cast.injective⟩
+instance strict_ordered_semiring.to_char_zero : char_zero α := ⟨nat.strict_mono_cast.injective⟩
 
 end strict_ordered_semiring
 
