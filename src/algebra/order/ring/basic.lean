@@ -548,7 +548,9 @@ instance strict_ordered_semiring.to_no_max_order : no_max_order α :=
 ⟨λ a, ⟨a + 1, lt_add_of_pos_right _ one_pos⟩⟩
 
 instance strict_ordered_semiring.to_char_zero : char_zero α :=
-⟨(strict_mono_nat_of_lt_succ $ λ n, by { rw [nat.cast_succ], apply lt_add_one }).injective⟩
+have strict_mono (coe : ℕ → α),
+from strict_mono_nat_of_lt_succ (λ n, by { rw [nat.cast_succ], apply lt_add_one }),
+⟨this.injective⟩
 
 end strict_ordered_semiring
 

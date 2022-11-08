@@ -88,13 +88,13 @@ order_embedding.of_strict_mono coe strict_mono_cast
 @[simp, norm_cast] lemma cast_le : (m : α) ≤ n ↔ m ≤ n := strict_mono_cast.le_iff_le
 @[simp, norm_cast, mono] lemma cast_lt : (m : α) < n ↔ m < n := strict_mono_cast.lt_iff_lt
 
-@[simp, norm_cast] lemma one_lt_cast : 1 < (n : α) ↔ 1 < n := by rw [←cast_one, cast_lt']
-@[simp, norm_cast] lemma one_le_cast : 1 ≤ (n : α) ↔ 1 ≤ n := by rw [←cast_one, cast_le']
+@[simp, norm_cast] lemma one_lt_cast : 1 < (n : α) ↔ 1 < n := by rw [←cast_one, cast_lt]
+@[simp, norm_cast] lemma one_le_cast : 1 ≤ (n : α) ↔ 1 ≤ n := by rw [←cast_one, cast_le]
 
 @[simp, norm_cast] lemma cast_lt_one : (n : α) < 1 ↔ n = 0 :=
-by rw [←cast_one, cast_lt', lt_succ_iff, le_zero_iff]
+by rw [←cast_one, cast_lt, lt_succ_iff, le_zero_iff]
 
-@[simp, norm_cast] lemma cast_le_one : (n : α) ≤ 1 ↔ n ≤ 1 := by rw [←cast_one, cast_le']
+@[simp, norm_cast] lemma cast_le_one : (n : α) ≤ 1 ↔ n ≤ 1 := by rw [←cast_one, cast_le]
 
 end ordered_semiring
 
