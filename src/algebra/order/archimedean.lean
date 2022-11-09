@@ -108,7 +108,7 @@ let ⟨n, h⟩ := archimedean.arch x hy in
        ... = (y + 1) ^ n : by rw [add_comm]⟩
 
 section strict_ordered_ring
-variables [strict_ordered_ring α] [nontrivial α] [archimedean α]
+variables [strict_ordered_ring α] [archimedean α]
 
 lemma pow_unbounded_of_one_lt (x : α) {y : α} (hy1 : 1 < y) :
   ∃ n : ℕ, x < y ^ n :=

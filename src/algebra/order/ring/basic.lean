@@ -547,6 +547,7 @@ lemma lt_two_mul_self (ha : 0 < a) : a < 2 * a := lt_mul_of_one_lt_left ha one_l
 instance strict_ordered_semiring.to_no_max_order : no_max_order α :=
 ⟨λ a, ⟨a + 1, lt_add_of_pos_right _ one_pos⟩⟩
 
+@[priority 100] -- see Note [lower instance priority]
 instance strict_ordered_semiring.to_char_zero : char_zero α :=
 have strict_mono (coe : ℕ → α),
 from strict_mono_nat_of_lt_succ (λ n, by { rw [nat.cast_succ], apply lt_add_one }),
@@ -1057,8 +1058,8 @@ protected def strict_ordered_semiring [strict_ordered_semiring α] [has_zero β]
 
 /-- Pullback a `strict_ordered_comm_semiring` under an injective map. -/
 @[reducible] -- See note [reducible non-instances]
-protected def strict_ordered_comm_semiring [strict_ordered_comm_semiring α] [nontrivial β]
-  [has_zero β] [has_one β] [has_add β] [has_mul β] [has_pow β ℕ] [has_smul ℕ β] [has_nat_cast β]
+protected def strict_ordered_comm_semiring [strict_ordered_comm_semiring α] [has_zero β] [has_one β]
+  [has_add β] [has_mul β] [has_pow β ℕ] [has_smul ℕ β] [has_nat_cast β]
   (f : β → α) (hf : injective f) (zero : f 0 = 0) (one : f 1 = 1)
   (add : ∀ x y, f (x + y) = f x + f y) (mul : ∀ x y, f (x * y) = f x * f y)
   (nsmul : ∀ x (n : ℕ), f (n • x) = n • f x) (npow : ∀ x (n : ℕ), f (x ^ n) = f x ^ n)
@@ -1069,7 +1070,7 @@ protected def strict_ordered_comm_semiring [strict_ordered_comm_semiring α] [no
 
 /-- Pullback a `strict_ordered_ring` under an injective map. -/
 @[reducible] -- See note [reducible non-instances]
-protected def strict_ordered_ring [strict_ordered_ring α] [nontrivial β] [has_zero β] [has_one β]
+protected def strict_ordered_ring [strict_ordered_ring α] [has_zero β] [has_one β]
   [has_add β] [has_mul β] [has_neg β] [has_sub β] [has_smul ℕ β] [has_smul ℤ β] [has_pow β ℕ]
   [has_nat_cast β] [has_int_cast β] (f : β → α) (hf : injective f) (zero : f 0 = 0) (one : f 1 = 1)
   (add : ∀ x y, f (x + y) = f x + f y) (mul : ∀ x y, f (x * y) = f x * f y)
