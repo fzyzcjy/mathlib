@@ -136,6 +136,7 @@ instance socsN2 : strict_ordered_comm_semiring (ℕ × zmod 2) :=
 { add_le_add_left := add_le_add_left,
   le_of_add_le_add_left := le_of_add_le_add_left,
   zero_le_one := zero_le_one,
+  zero_lt_one := dec_trivial,
   mul_lt_mul_of_pos_left := mul_lt_mul_of_pos_left,
   mul_lt_mul_of_pos_right := mul_lt_mul_of_pos_right,
   ..Nxzmod_2.csrN2_1,
