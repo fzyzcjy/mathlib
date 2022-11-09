@@ -280,7 +280,7 @@ archimedean_iff_nat_lt.trans
    lt_of_le_of_lt h (nat.cast_lt.2 (lt_add_one _))⟩⟩
 
 lemma archimedean_iff_int_lt : archimedean α ↔ ∀ x : α, ∃ n : ℤ, x < n :=
-⟨@exists_int_gt α _ _,
+⟨@exists_int_gt α _,
 begin
   rw archimedean_iff_nat_lt,
   intros h x,
