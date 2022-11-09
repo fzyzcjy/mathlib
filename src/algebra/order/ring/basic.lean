@@ -1085,8 +1085,8 @@ protected def strict_ordered_ring [strict_ordered_ring α] [has_zero β] [has_on
 
 /-- Pullback a `strict_ordered_comm_ring` under an injective map. -/
 @[reducible] -- See note [reducible non-instances]
-protected def strict_ordered_comm_ring [strict_ordered_comm_ring α] [nontrivial β] [has_zero β]
-  [has_one β] [has_add β] [has_mul β] [has_neg β] [has_sub β] [has_pow β ℕ] [has_smul ℕ β]
+protected def strict_ordered_comm_ring [strict_ordered_comm_ring α] [has_zero β] [has_one β]
+  [has_add β] [has_mul β] [has_neg β] [has_sub β] [has_pow β ℕ] [has_smul ℕ β]
   [has_smul ℤ β] [has_nat_cast β] [has_int_cast β] (f : β → α) (hf : injective f) (zero : f 0 = 0)
   (one : f 1 = 1) (add : ∀ x y, f (x + y) = f x + f y) (mul : ∀ x y, f (x * y) = f x * f y)
   (neg : ∀ x, f (- x) = - f x) (sub : ∀ x y, f (x - y) = f x - f y)
@@ -1099,8 +1099,8 @@ protected def strict_ordered_comm_ring [strict_ordered_comm_ring α] [nontrivial
 
 /-- Pullback a `linear_ordered_semiring` under an injective map. -/
 @[reducible] -- See note [reducible non-instances]
-protected def linear_ordered_semiring [linear_ordered_semiring α] [has_zero β]
-  [has_one β] [has_add β] [has_mul β] [has_pow β ℕ] [has_smul ℕ β] [has_nat_cast β] [has_sup β]
+protected def linear_ordered_semiring [linear_ordered_semiring α] [has_zero β] [has_one β]
+  [has_add β] [has_mul β] [has_pow β ℕ] [has_smul ℕ β] [has_nat_cast β] [has_sup β]
   [has_inf β] (f : β → α) (hf : injective f) (zero : f 0 = 0) (one : f 1 = 1)
   (add : ∀ x y, f (x + y) = f x + f y) (mul : ∀ x y, f (x * y) = f x * f y)
   (nsmul : ∀ x (n : ℕ), f (n • x) = n • f x) (npow : ∀ x (n : ℕ), f (x ^ n) = f x ^ n)
@@ -1113,8 +1113,8 @@ by haveI := pullback_nonzero f zero one; exact
 
 /-- Pullback a `linear_ordered_semiring` under an injective map. -/
 @[reducible] -- See note [reducible non-instances]
-protected def linear_ordered_comm_semiring [linear_ordered_comm_semiring α]
-  [has_zero β] [has_one β] [has_add β] [has_mul β] [has_pow β ℕ] [has_smul ℕ β] [has_nat_cast β]
+protected def linear_ordered_comm_semiring [linear_ordered_comm_semiring α] [has_zero β] [has_one β]
+  [has_add β] [has_mul β] [has_pow β ℕ] [has_smul ℕ β] [has_nat_cast β]
   [has_sup β] [has_inf β] (f : β → α) (hf : injective f) (zero : f 0 = 0) (one : f 1 = 1)
   (add : ∀ x y, f (x + y) = f x + f y) (mul : ∀ x y, f (x * y) = f x * f y)
   (nsmul : ∀ x (n : ℕ), f (n • x) = n • f x) (npow : ∀ x (n : ℕ), f (x ^ n) = f x ^ n)
