@@ -553,8 +553,8 @@ instance _root_.bundle.prod.vector_bundle :
     rintros - - ⟨⟨e₁, e₂⟩, ⟨i₁, i₂⟩, rfl⟩ ⟨⟨e₁', e₂'⟩, ⟨i₁', i₂'⟩, rfl⟩,
     simp_rw [← mem_trivialization_atlas_iff] at i₁ i₂ i₁' i₂',
     resetI,
-    refine (((continuous_on_coord_changeL e₁ e₁').mono _).prod_mapL R
-      ((continuous_on_coord_changeL e₂ e₂').mono _)).congr _;
+    refine (((continuous_on_coord_change e₁ e₁').mono _).prod_mapL R
+      ((continuous_on_coord_change e₂ e₂').mono _)).congr _;
     dsimp only [base_set_prod] with mfld_simps,
     { mfld_set_tac },
     { mfld_set_tac },
