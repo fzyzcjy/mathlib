@@ -86,10 +86,6 @@ variables (F₂ : Type*) [normed_add_comm_group F₂][normed_space 𝕜₂ F₂]
 open topological_vector_bundle
 
 variables {F₁ E₁ F₂ E₂} (e₁ e₁' : trivialization F₁ (π E₁)) (e₂ e₂' : trivialization F₂ (π E₂))
-<<<<<<< HEAD
-variables [ring_hom_isometric σ]
-=======
->>>>>>> move-trivialization
 
 namespace pretrivialization
 
@@ -103,11 +99,7 @@ function between the two induced (pre)trivializations
 def continuous_linear_map_coord_change
   [e₁.is_linear 𝕜₁] [e₁'.is_linear 𝕜₁] [e₂.is_linear 𝕜₂] [e₂'.is_linear 𝕜₂] (b : B) :
   (F₁ →SL[σ] F₂) →L[𝕜₂] F₁ →SL[σ] F₂ :=
-<<<<<<< HEAD
-((e₁'.coord_changeₗ 𝕜₁ e₁ b).symm.arrow_congrSL (e₂.coord_changeₗ 𝕜₂ e₂' b) :
-=======
 ((e₁'.coord_changeL 𝕜₁ e₁ b).symm.arrow_congrSL (e₂.coord_changeL 𝕜₂ e₂' b) :
->>>>>>> move-trivialization
   (F₁ →SL[σ] F₂) ≃L[𝕜₂] F₁ →SL[σ] F₂)
 
 variables {σ e₁ e₁' e₂ e₂'}
@@ -221,11 +213,7 @@ begin
     comp_apply, continuous_linear_equiv.coe_coe, continuous_linear_equiv.symm_symm,
     trivialization.continuous_linear_map_at_apply, trivialization.symmL_apply],
   dsimp only [total_space_mk],
-<<<<<<< HEAD
-  rw [e₂.coord_changeₗ_apply e₂', e₁'.coord_changeₗ_apply e₁, e₁.coe_linear_map_at_of_mem hb.1.1,
-=======
   rw [e₂.coord_changeL_apply e₂', e₁'.coord_changeL_apply e₁, e₁.coe_linear_map_at_of_mem hb.1.1,
->>>>>>> move-trivialization
     e₂'.coe_linear_map_at_of_mem hb.2.2],
   exacts [⟨hb.2.1, hb.1.1⟩, ⟨hb.1.2, hb.2.2⟩]
 end
