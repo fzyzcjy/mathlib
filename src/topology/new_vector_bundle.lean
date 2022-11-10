@@ -166,7 +166,7 @@ e.to_pretrivialization.linear_map_at_symmₗ R hb y
 
 /-- A coordinate change function between two trivializations, as a continuous linear equivalence.
   Defined to be the identity when `b` does not lie in the base set of both trivializations. -/
-def coord_change (b : B) : F ≃L[R] F :=
+def coord_changeL (b : B) : F ≃L[R] F :=
 { continuous_to_fun := begin
     by_cases hb : b ∈ e.base_set ∩ e'.base_set,
     { simp_rw [dif_pos hb],
@@ -189,48 +189,48 @@ def coord_change (b : B) : F ≃L[R] F :=
      (e.linear_equiv_at R b (hb.1 : _)).symm.trans (e'.linear_equiv_at R b hb.2)
     else linear_equiv.refl R F }
 
-lemma coe_coord_change {b : B}
+lemma coe_coord_changeL {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) :
-  ⇑(coord_change R e e' b) =
+  ⇑(coord_changeL R e e' b) =
   (e.linear_equiv_at R b hb.1).symm.trans (e'.linear_equiv_at R b hb.2) :=
 congr_arg linear_equiv.to_fun (dif_pos hb)
 
-lemma coord_change_apply {b : B}
+lemma coord_changeL_apply {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) (y : F) :
-  coord_change R e e' b y = (e' (total_space_mk b (e.symm b y))).2 :=
+  coord_changeL R e e' b y = (e' (total_space_mk b (e.symm b y))).2 :=
 congr_arg (λ f, linear_equiv.to_fun f y) (dif_pos hb)
 
-lemma mk_coord_change {b : B}
+lemma mk_coord_changeL {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) (y : F) :
-  (b, coord_change R e e' b y) = e' (total_space_mk b (e.symm b y)) :=
+  (b, coord_changeL R e e' b y) = e' (total_space_mk b (e.symm b y)) :=
 begin
   ext,
   { rw [e.mk_symm hb.1 y, e'.coe_fst', e.proj_symm_apply' hb.1],
     rw [e.proj_symm_apply' hb.1], exact hb.2 },
-  { exact e.coord_change_apply R e' hb y }
+  { exact e.coord_changeL_apply R e' hb y }
 end
 
-/-- A version of `coord_change_apply` that fully unfolds `coord_change`. The right-hand side is
+/-- A version of `coord_changeL_apply` that fully unfolds `coord_changeL`. The right-hand side is
 ugly, but has good definitional properties for specifically defined trivializations. -/
-lemma coord_change_apply' {b : B}
+lemma coord_changeL_apply' {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) (y : F) :
-  coord_change R e e' b y = (e' (e.to_local_homeomorph.symm (b, y))).2 :=
-by rw [e.coord_change_apply R e' hb, e.mk_symm hb.1]
+  coord_changeL R e e' b y = (e' (e.to_local_homeomorph.symm (b, y))).2 :=
+by rw [e.coord_changeL_apply R e' hb, e.mk_symm hb.1]
 
-lemma coord_change_symm_apply {b : B}
+lemma coord_changeL_symm_apply {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) :
-  ⇑(coord_change R e e' b).symm =
+  ⇑(coord_changeL R e e' b).symm =
   (e'.linear_equiv_at R b hb.2).symm.trans (e.linear_equiv_at R b hb.1) :=
 congr_arg linear_equiv.inv_fun (dif_pos hb)
 
-lemma symm_coord_change {b : B} (hb : b ∈ e'.base_set ∩ e.base_set) :
-  (e.coord_change R e' b).symm = e'.coord_change R e b :=
+lemma symm_coord_changeL {b : B} (hb : b ∈ e'.base_set ∩ e.base_set) :
+  (e.coord_changeL R e' b).symm = e'.coord_changeL R e b :=
 begin
   sorry,
 end
 
-lemma apply_symm_apply_eq_coord_change {b : B} (hb : b ∈ e.base_set ∩ e'.base_set) (v : F) :
-  e' ((e.to_local_homeomorph.symm) (b, v)) = (b, e.coord_change R e' b v) :=
+lemma apply_symm_apply_eq_coord_changeL {b : B} (hb : b ∈ e.base_set ∩ e'.base_set) (v : F) :
+  e' ((e.to_local_homeomorph.symm) (b, v)) = (b, e.coord_changeL R e' b v) :=
 begin
   sorry,
 end
@@ -255,7 +255,7 @@ class vector_bundle : Prop :=
   haveI : e.is_linear 𝕜 := @trivialization_linear e he,
   haveI : e'.is_linear 𝕜 := @trivialization_linear e' he',
   exactI continuous_on
-  (λ b, trivialization.coord_change 𝕜 e e' b : B → F →L[𝕜] F) (e.base_set ∩ e'.base_set) })
+  (λ b, trivialization.coord_changeL 𝕜 e e' b : B → F →L[𝕜] F) (e.base_set ∩ e'.base_set) })
 
 export vector_bundle (continuous_on_coord_change)
 attribute [instance] vector_bundle.trivialization_linear
@@ -268,7 +268,7 @@ variables [vector_bundle 𝕜 F E]
 example [fiber_bundle F E] [vector_bundle 𝕜 F E] (e e' : trivialization F (π E))
   [mem_trivialization_atlas e] [mem_trivialization_atlas e'] :
   continuous_on
-  (λ b, trivialization.coord_change 𝕜 e e' b : B → F →L[𝕜] F) (e.base_set ∩ e'.base_set) :=
+  (λ b, trivialization.coord_changeL 𝕜 e e' b : B → F →L[𝕜] F) (e.base_set ∩ e'.base_set) :=
 vector_bundle.continuous_on_coord_change e e'
 
 
@@ -366,11 +366,11 @@ begin
     continuous_linear_equiv.apply_symm_apply],
 end
 
-lemma comp_continuous_linear_equiv_at_eq_coord_change {b : B}
+lemma comp_continuous_linear_equiv_at_eq_coord_changeL {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) :
   (e.continuous_linear_equiv_at 𝕜 b hb.1).symm.trans (e'.continuous_linear_equiv_at 𝕜 b hb.2)
-  = coord_change 𝕜 e e' b :=
-by { ext v, rw [coord_change_apply 𝕜 e e' hb], refl }
+  = coord_changeL 𝕜 e e' b :=
+by { ext v, rw [coord_changeL_apply 𝕜 e e' hb], refl }
 
 end trivialization
 
@@ -434,10 +434,10 @@ variables (i j : ι)
 
 @[simp, mfld_simps] lemma local_triv_coord_change_eq {b : B} (hb : b ∈ Z.base_set i ∩ Z.base_set j)
   (v : F) :
-  (Z.to_fiber_bundle_core.local_triv i).coord_change 𝕜 (Z.to_fiber_bundle_core.local_triv j) b v =
+  (Z.to_fiber_bundle_core.local_triv i).coord_changeL 𝕜 (Z.to_fiber_bundle_core.local_triv j) b v =
   Z.coord_change i j b v :=
 begin
-  rw [trivialization.coord_change_apply', local_triv_symm_fst, local_triv_apply,
+  rw [trivialization.coord_changeL_apply', local_triv_symm_fst, local_triv_apply,
     coord_change_comp],
   exacts [⟨⟨hb.1, Z.mem_base_set_at b⟩, hb.2⟩, hb]
 end
@@ -472,10 +472,10 @@ instance trivialization.linear : (trivialization B F).is_linear 𝕜 :=
 { linear := λ x hx, ⟨λ y z, rfl, λ c y, rfl⟩ }
 
 lemma trivialization.coord_change (b : B) :
-  (trivialization B F).coord_change 𝕜 (trivialization B F) b = continuous_linear_equiv.refl 𝕜 F :=
+  (trivialization B F).coord_changeL 𝕜 (trivialization B F) b = continuous_linear_equiv.refl 𝕜 F :=
 begin
   ext v,
-  rw [trivialization.coord_change_apply'],
+  rw [trivialization.coord_changeL_apply'],
   exacts [rfl, ⟨mem_univ _, mem_univ _⟩]
 end
 
@@ -553,18 +553,18 @@ instance _root_.bundle.prod.vector_bundle :
     rintros - - ⟨⟨e₁, e₂⟩, ⟨i₁, i₂⟩, rfl⟩ ⟨⟨e₁', e₂'⟩, ⟨i₁', i₂'⟩, rfl⟩,
     simp_rw [← mem_trivialization_atlas_iff] at i₁ i₂ i₁' i₂',
     resetI,
-    refine (((continuous_on_coord_change e₁ e₁').mono _).prod_mapL R
-      ((continuous_on_coord_change e₂ e₂').mono _)).congr _;
+    refine (((continuous_on_coord_changeL e₁ e₁').mono _).prod_mapL R
+      ((continuous_on_coord_changeL e₂ e₂').mono _)).congr _;
     dsimp only [base_set_prod] with mfld_simps,
     { mfld_set_tac },
     { mfld_set_tac },
     { rintro b hb,
       rw [continuous_linear_map.ext_iff],
       rintro ⟨v₁, v₂⟩,
-      show (e₁.prod e₂).coord_change R (e₁'.prod e₂') b (v₁, v₂) =
-        (e₁.coord_change R e₁' b v₁, e₂.coord_change R e₂' b v₂),
-      rw [e₁.coord_change_apply R e₁', e₂.coord_change_apply R e₂',
-        (e₁.prod e₂).coord_change_apply' R],
+      show (e₁.prod e₂).coord_changeL R (e₁'.prod e₂') b (v₁, v₂) =
+        (e₁.coord_changeL R e₁' b v₁, e₂.coord_changeL R e₂' b v₂),
+      rw [e₁.coord_changeL_apply R e₁', e₂.coord_changeL_apply R e₂',
+        (e₁.prod e₂).coord_changeL_apply' R],
       exacts [rfl, hb, ⟨hb.1.2, hb.2.2⟩, ⟨hb.1.1, hb.2.1⟩] }
   end }
 
