@@ -71,10 +71,6 @@ pretrivialization.is_linear.linear b hb
 
 variables [add_comm_monoid F] [module R F] [∀ x, add_comm_monoid (E x)] [∀ x, module R (E x)]
 
-end has_zero
-
-variables [add_comm_monoid F] [module R F] [∀ x, add_comm_monoid (E x)] [∀ x, module R (E x)]
-
 /-- A fiberwise linear inverse to `e`. -/
 @[simps] protected def symmₗ (e : pretrivialization F (π E)) [e.is_linear R] (b : B) :
   F →ₗ[R] E b :=
@@ -165,10 +161,6 @@ instance to_pretrivialization.is_linear [add_comm_monoid F] [module R F]
   [∀ x, add_comm_monoid (E x)] [∀ x, module R (E x)] [e.is_linear R] :
   e.to_pretrivialization.is_linear R :=
 { ..(‹_› : e.is_linear R) }
-
-variables [add_comm_monoid F] [module R F] [∀ x, add_comm_monoid (E x)] [∀ x, module R (E x)]
-
-end has_zero
 
 variables [add_comm_monoid F] [module R F] [∀ x, add_comm_monoid (E x)] [∀ x, module R (E x)]
 
