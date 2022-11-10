@@ -618,23 +618,8 @@ lemma is_local_structomorph_within_at_local_invariant_prop [closed_under_restric
 variables {H₁ : Type*} [topological_space H₁] {H₂ : Type*} [topological_space H₂]
    {H₃ : Type*} [topological_space H₃] [charted_space H₁ H₂] [charted_space H₂ H₃]
    {G₁ : structure_groupoid H₁} [has_groupoid H₂ G₁] [closed_under_restriction G₁]
-   {G₂ : structure_groupoid H₂} [has_groupoid H₃ G₂]
+   (G₂ : structure_groupoid H₂) [has_groupoid H₃ G₂]
 
--- move to `topology.local_homeomorph`
-lemma set.eq_on.restr_eq_on_source {e e' : local_homeomorph H₁ H₁}
-  (h : eq_on e e' (e.source ∩ e'.source)) :
-  e.restr e'.source ≈ e'.restr e.source :=
-begin
-  split,
-  { rw e'.restr_source' _ e.open_source,
-    rw e.restr_source' _ e'.open_source,
-    exact set.inter_comm _ _ },
-  { rw e.restr_source' _ e'.open_source,
-    refine (eq_on.trans _ h).trans _;
-    simp only with mfld_simps },
-end
-
-variables (G₂)
 lemma has_groupoid.comp
   (H : ∀ e ∈ G₂, lift_prop_on (is_local_structomorph_within_at G₁) (e : H₂ → H₂) e.source) :
   @has_groupoid H₁ _ H₃ _ (charted_space.comp H₁ H₂ H₃) G₁ :=

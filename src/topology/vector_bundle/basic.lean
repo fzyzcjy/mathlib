@@ -5,7 +5,7 @@ Authors: Nicolò Cavalleri, Sebastien Gouezel, Heather Macbeth, Patrick Massot, 
 -/
 
 import analysis.normed_space.bounded_linear_maps
-import topology.fiber_bundle
+import topology.fiber_bundle.basic
 
 /-!
 # Topological vector bundles
@@ -69,56 +69,7 @@ lemma linear [add_comm_monoid F] [module R F] [∀ x, add_comm_monoid (E x)] [�
   is_linear_map R (λ x : E b, (e (total_space_mk b x)).2) :=
 pretrivialization.is_linear.linear b hb
 
-lemma coe_mem_source : ↑y ∈ e.source ↔ b ∈ e.base_set := e.mem_source
-
-@[simp, mfld_simps] lemma coe_coe_fst (hb : b ∈ e.base_set) : (e y).1 = b :=
-e.coe_fst (e.mem_source.2 hb)
-
-lemma mk_mem_target {x : B} {y : F} : (x, y) ∈ e.target ↔ x ∈ e.base_set :=
-e.mem_target
-
-lemma symm_coe_proj {x : B} {y : F} (e : pretrivialization F (π E)) (h : x ∈ e.base_set) :
-  (e.to_local_equiv.symm (x, y)).1 = x :=
-e.proj_symm_apply' h
-
-section has_zero
-variables [∀ x, has_zero (E x)]
-
-/-- A fiberwise inverse to `e`. This is the function `F → E b` that induces a local inverse
-`B × F → total_space E` of `e` on `e.base_set`. It is defined to be `0` outside `e.base_set`. -/
-protected def symm (e : pretrivialization F (π E)) (b : B) (y : F) : E b :=
-if hb : b ∈ e.base_set
-then cast (congr_arg E (e.proj_symm_apply' hb)) (e.to_local_equiv.symm (b, y)).2
-else 0
-
-lemma symm_apply (e : pretrivialization F (π E)) {b : B} (hb : b ∈ e.base_set) (y : F) :
-  e.symm b y = cast (congr_arg E (e.symm_coe_proj hb)) (e.to_local_equiv.symm (b, y)).2 :=
-dif_pos hb
-
-lemma symm_apply_of_not_mem (e : pretrivialization F (π E)) {b : B} (hb : b ∉ e.base_set) (y : F) :
-  e.symm b y = 0 :=
-dif_neg hb
-
-lemma coe_symm_of_not_mem (e : pretrivialization F (π E)) {b : B} (hb : b ∉ e.base_set) :
-  (e.symm b : F → E b) = 0 :=
-funext $ λ y, dif_neg hb
-
-lemma mk_symm (e : pretrivialization F (π E)) {b : B} (hb : b ∈ e.base_set) (y : F) :
-  total_space_mk b (e.symm b y) = e.to_local_equiv.symm (b, y) :=
-by rw [e.symm_apply hb, total_space.mk_cast, total_space.eta]
-
-lemma symm_proj_apply (e : pretrivialization F (π E)) (z : total_space E)
-  (hz : z.proj ∈ e.base_set) : e.symm z.proj (e z).2 = z.2 :=
-by rw [e.symm_apply hz, cast_eq_iff_heq, e.mk_proj_snd' hz,
-  e.symm_apply_apply (e.mem_source.mpr hz)]
-
-lemma symm_apply_apply_mk (e : pretrivialization F (π E)) {b : B} (hb : b ∈ e.base_set) (y : E b) :
-  e.symm b (e (total_space_mk b y)).2 = y :=
-e.symm_proj_apply (total_space_mk b y) hb
-
-lemma apply_mk_symm (e : pretrivialization F (π E)) {b : B} (hb : b ∈ e.base_set) (y : F) :
-  e (total_space_mk b (e.symm b y)) = (b, y) :=
-by rw [e.mk_symm hb, e.apply_symm_apply (e.mk_mem_target.mpr hb)]
+variables [add_comm_monoid F] [module R F] [∀ x, add_comm_monoid (E x)] [∀ x, module R (E x)]
 
 end has_zero
 
@@ -215,69 +166,7 @@ instance to_pretrivialization.is_linear [add_comm_monoid F] [module R F]
   e.to_pretrivialization.is_linear R :=
 { ..(‹_› : e.is_linear R) }
 
-protected lemma continuous_on : continuous_on e e.source := e.continuous_to_fun
-
-lemma coe_mem_source : ↑y ∈ e.source ↔ b ∈ e.base_set := e.mem_source
-
-lemma open_target : is_open e.target :=
-by { rw e.target_eq, exact e.open_base_set.prod is_open_univ }
-
-@[simp, mfld_simps] lemma coe_coe_fst (hb : b ∈ e.base_set) : (e y).1 = b :=
-e.coe_fst (e.mem_source.2 hb)
-
-lemma mk_mem_target {y : F} : (b, y) ∈ e.target ↔ b ∈ e.base_set :=
-e.to_pretrivialization.mem_target
-
-lemma symm_apply_apply {x : total_space E} (hx : x ∈ e.source) :
-  e.to_local_homeomorph.symm (e x) = x :=
-e.to_local_equiv.left_inv hx
-
-@[simp, mfld_simps] lemma symm_coe_proj {x : B} {y : F}
-  (e : trivialization F (π E)) (h : x ∈ e.base_set) :
-  (e.to_local_homeomorph.symm (x, y)).1 = x := e.proj_symm_apply' h
-
-section has_zero
-variables [∀ x, has_zero (E x)]
-
-/-- A fiberwise inverse to `e`. The function `F → E x` that induces a local inverse
-  `B × F → total_space E` of `e` on `e.base_set`. It is defined to be `0` outside `e.base_set`. -/
-protected def symm (e : trivialization F (π E)) (b : B) (y : F) : E b :=
-e.to_pretrivialization.symm b y
-
-lemma symm_apply (e : trivialization F (π E)) {b : B} (hb : b ∈ e.base_set) (y : F) :
-  e.symm b y = cast (congr_arg E (e.symm_coe_proj hb)) (e.to_local_homeomorph.symm (b, y)).2 :=
-dif_pos hb
-
-lemma symm_apply_of_not_mem (e : trivialization F (π E)) {b : B} (hb : b ∉ e.base_set) (y : F) :
-  e.symm b y = 0 :=
-dif_neg hb
-
-lemma mk_symm (e : trivialization F (π E)) {b : B} (hb : b ∈ e.base_set) (y : F) :
-  total_space_mk b (e.symm b y) = e.to_local_homeomorph.symm (b, y) :=
-e.to_pretrivialization.mk_symm hb y
-
-lemma symm_proj_apply (e : trivialization F (π E)) (z : total_space E)
-  (hz : z.proj ∈ e.base_set) : e.symm z.proj (e z).2 = z.2 :=
-e.to_pretrivialization.symm_proj_apply z hz
-
-lemma symm_apply_apply_mk (e : trivialization F (π E)) {b : B} (hb : b ∈ e.base_set) (y : E b) :
-  e.symm b (e (total_space_mk b y)).2 = y :=
-e.symm_proj_apply (total_space_mk b y) hb
-
-lemma apply_mk_symm (e : trivialization F (π E)) {b : B} (hb : b ∈ e.base_set) (y : F) :
-  e (total_space_mk b (e.symm b y)) = (b, y) :=
-e.to_pretrivialization.apply_mk_symm hb y
-
-lemma continuous_on_symm (e : trivialization F (π E)) :
-  continuous_on (λ z : B × F, total_space_mk z.1 (e.symm z.1 z.2)) (e.base_set ×ˢ univ) :=
-begin
-  have : ∀ (z : B × F) (hz : z ∈ e.base_set ×ˢ (univ : set F)),
-    total_space_mk z.1 (e.symm z.1 z.2) = e.to_local_homeomorph.symm z,
-  { rintro x ⟨hx : x.1 ∈ e.base_set, _⟩, simp_rw [e.mk_symm hx, prod.mk.eta] },
-  refine continuous_on.congr _ this,
-  rw [← e.target_eq],
-  exact e.to_local_homeomorph.continuous_on_symm
-end
+variables [add_comm_monoid F] [module R F] [∀ x, add_comm_monoid (E x)] [∀ x, module R (E x)]
 
 end has_zero
 
@@ -357,7 +246,7 @@ variables (R)
 
 /-- A coordinate change function between two trivializations, as a continuous linear equivalence.
   Defined to be the identity when `b` does not lie in the base set of both trivializations. -/
-def coord_changeₗ (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] (b : B) :
+def coord_changeL (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] (b : B) :
   F ≃L[R] F :=
 { continuous_to_fun := begin
     by_cases hb : b ∈ e.base_set ∩ e'.base_set,
@@ -383,37 +272,37 @@ def coord_changeₗ (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_line
 
 variables {R}
 
-lemma coe_coord_changeₗ (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] {b : B}
+lemma coe_coord_changeL (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) :
-  ⇑(coord_changeₗ R e e' b)
+  ⇑(coord_changeL R e e' b)
   = (e.linear_equiv_at R b hb.1).symm.trans (e'.linear_equiv_at R b hb.2) :=
 congr_arg linear_equiv.to_fun (dif_pos hb)
 
-lemma coord_changeₗ_apply (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] {b : B}
+lemma coord_changeL_apply (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) (y : F) :
-  coord_changeₗ R e e' b y = (e' (total_space_mk b (e.symm b y))).2 :=
+  coord_changeL R e e' b y = (e' (total_space_mk b (e.symm b y))).2 :=
 congr_arg (λ f, linear_equiv.to_fun f y) (dif_pos hb)
 
-lemma mk_coord_changeₗ (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] {b : B}
+lemma mk_coord_changeL (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) (y : F) :
-  (b, coord_changeₗ R e e' b y) = e' (total_space_mk b (e.symm b y)) :=
+  (b, coord_changeL R e e' b y) = e' (total_space_mk b (e.symm b y)) :=
 begin
   ext,
   { rw [e.mk_symm hb.1 y, e'.coe_fst', e.proj_symm_apply' hb.1],
     rw [e.proj_symm_apply' hb.1], exact hb.2 },
-  { exact e.coord_changeₗ_apply e' hb y }
+  { exact e.coord_changeL_apply e' hb y }
 end
 
 /-- A version of `coord_change_apply` that fully unfolds `coord_change`. The right-hand side is
 ugly, but has good definitional properties for specifically defined trivializations. -/
-lemma coord_changeₗ_apply' (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] {b : B}
+lemma coord_changeL_apply' (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R] {b : B}
   (hb : b ∈ e.base_set ∩ e'.base_set) (y : F) :
-  coord_changeₗ R e e' b y = (e' (e.to_local_homeomorph.symm (b, y))).2 :=
-by rw [e.coord_changeₗ_apply e' hb, e.mk_symm hb.1]
+  coord_changeL R e e' b y = (e' (e.to_local_homeomorph.symm (b, y))).2 :=
+by rw [e.coord_changeL_apply e' hb, e.mk_symm hb.1]
 
-lemma coord_changeₗ_symm_apply (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R]
+lemma coord_changeL_symm_apply (e e' : trivialization F (π E)) [e.is_linear R] [e'.is_linear R]
   {b : B} (hb : b ∈ e.base_set ∩ e'.base_set) :
-  ⇑(coord_changeₗ R e e' b).symm
+  ⇑(coord_changeL R e e' b).symm
   = (e'.linear_equiv_at R b hb.2).symm.trans (e.linear_equiv_at R b hb.1) :=
 congr_arg linear_equiv.inv_fun (dif_pos hb)
 
@@ -423,22 +312,9 @@ end topological_vector_space
 
 section
 
-variables (B)
 variables [nontrivially_normed_field R] [∀ x, add_comm_monoid (E x)] [∀ x, module R (E x)]
   [normed_add_comm_group F] [normed_space R F] [topological_space B]
   [topological_space (total_space E)] [∀ x, topological_space (E x)]
-
-/-- The valid transition functions for a topological vector bundle over `B` modelled on
-a normed space `F`: a transition function must be a local homeomorphism of `B × F` with source and
-target both `s ×ˢ univ`, which on this set is of the form `λ (b, v), (b, ε b v)` for some continuous
-map `ε` from `s` to `F ≃L[R] F`. Here continuity is with respect to the operator norm on
-`F →L[R] F`. -/
-def continuous_transitions (e : local_equiv (B × F) (B × F)) : Prop :=
-∃ s : set B, e.source = s ×ˢ univ ∧ e.target = s ×ˢ univ
-    ∧ ∃ ε : B → (F ≃L[R] F), continuous_on (λ b, (ε b : F →L[R] F)) s
-      ∧ ∀ b ∈ s, ∀ v : F, e (b, v) = (b, ε b v)
-
-variables {B}
 
 /-- The space `total_space E` (for `E : B → Type*` such that each `E x` is a topological vector
 space) has a topological vector space structure with fiber `F` (denoted with
@@ -457,7 +333,7 @@ class topological_vector_bundle :=
   have _ := trivialization_linear' e he,
   have _ := trivialization_linear' e' he',
   continuous_on
-  (λ b, by exactI trivialization.coord_changeₗ R e e' b : B → F →L[R] F) (e.base_set ∩ e'.base_set))
+  (λ b, by exactI trivialization.coord_changeL R e e' b : B → F →L[R] F) (e.base_set ∩ e'.base_set))
 
 export topological_vector_bundle (trivialization_atlas trivialization_at
   mem_base_set_trivialization_at trivialization_mem_atlas)
@@ -485,7 +361,7 @@ lemma continuous_on_coord_change (e e' : trivialization F (π E))
   [he : mem_trivialization_atlas R e]
   [he' : mem_trivialization_atlas R e'] :
   continuous_on
-  (λ b, trivialization.coord_changeₗ R e e' b : B → F →L[R] F) (e.base_set ∩ e'.base_set) :=
+  (λ b, trivialization.coord_changeL R e e' b : B → F →L[R] F) (e.base_set ∩ e'.base_set) :=
 topological_vector_bundle.continuous_on_coord_change' e e' he.out he'.out
 
 namespace trivialization
@@ -594,8 +470,8 @@ end
 lemma comp_continuous_linear_equiv_at_eq_coord_change (e e' : trivialization F (π E))
   [e.is_linear R] [e'.is_linear R] {b : B} (hb : b ∈ e.base_set ∩ e'.base_set) :
   (e.continuous_linear_equiv_at R b hb.1).symm.trans (e'.continuous_linear_equiv_at R b hb.2)
-  = coord_changeₗ R e e' b :=
-by { ext v, rw [coord_changeₗ_apply e e' hb], refl }
+  = coord_changeL R e e' b :=
+by { ext v, rw [coord_changeL_apply e e' hb], refl }
 
 end trivialization
 
@@ -630,12 +506,12 @@ instance trivialization.is_linear : (trivialization B F).is_linear R :=
 
 variables {R}
 
-lemma trivialization.coord_changeₗ (b : B) :
-  (trivialization B F).coord_changeₗ R
+lemma trivialization.coord_changeL (b : B) :
+  (trivialization B F).coord_changeL R
     (trivialization B F) b = continuous_linear_equiv.refl R F :=
 begin
   ext v,
-  rw [trivialization.coord_changeₗ_apply'],
+  rw [trivialization.coord_changeL_apply'],
   exacts [rfl, ⟨mem_univ _, mem_univ _⟩]
 end
 
@@ -668,7 +544,7 @@ instance topological_vector_bundle :
     rw mem_singleton_iff at he he',
     subst he,
     subst he',
-    simp_rw trivialization.coord_changeₗ,
+    simp_rw trivialization.coord_changeL,
     exact continuous_const.continuous_on
   end }
 
@@ -838,9 +714,9 @@ by apply (Z.local_triv i).symm_apply hb v
 
 @[simp, mfld_simps] lemma local_triv_coord_change_eq {b : B} (hb : b ∈ Z.base_set i ∩ Z.base_set j)
   (v : F) :
-  (Z.local_triv i).coord_changeₗ R (Z.local_triv j) b v = Z.coord_change i j b v :=
+  (Z.local_triv i).coord_changeL R (Z.local_triv j) b v = Z.coord_change i j b v :=
 begin
-  rw [trivialization.coord_changeₗ_apply', local_triv_symm_fst, local_triv_apply,
+  rw [trivialization.coord_changeL_apply', local_triv_symm_fst, local_triv_apply,
     coord_change_comp],
   exacts [⟨⟨hb.1, Z.mem_base_set_at b⟩, hb.2⟩, hb]
 end
@@ -1078,7 +954,7 @@ def to_topological_vector_bundle :
     intros b hb,
     ext v,
     rw [a.coord_change_apply he he' hb v, continuous_linear_equiv.coe_coe,
-      trivialization.coord_changeₗ_apply],
+      trivialization.coord_changeL_apply],
     exacts [rfl, hb]
   end }
 
